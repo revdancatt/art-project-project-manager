@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router()
 
 const main = require('./main')
+const project = require('./project')
+const projects = require('./projects')
 
 router.use(function (req, res, next) {
   req.templateValues = {}
@@ -15,5 +17,9 @@ router.use(function (req, res, next) {
 })
 
 router.get('/', main.index)
+router.post('/', main.index)
+router.get('/projects', projects.index)
+router.get('/project/:projectName', project.index)
+router.post('/project/:projectName', project.index)
 
 module.exports = router
