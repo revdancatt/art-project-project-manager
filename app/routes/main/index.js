@@ -4,6 +4,7 @@ const path = require('path')
 exports.index = async (req, res) => {
   // If a form has been posted here, process it
   if (req.method === 'POST') {
+    console.log(req.body)
     // Check to see if we have 'projectName' in the body
     if (req.body.projectName) {
       let projectsJSON = {}

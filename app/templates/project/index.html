@@ -35,6 +35,89 @@
 
   <section class="section has-background-white">
     <div class="container">
+      <h1 class="title">{{project.name}}</h1>
+      <!-- Now we have a form that we give all the details in -->
+      <form action="/project/{{project.name}}" method="POST">
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Local directory</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control is-expanded">
+                <input class="input" type="text" name="localDirectory" value="{{project.localDirectory}}">
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- if we have a github url, display it and make it a link, otherwise say no github -->
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">GitHub</label>
+          </div>
+          <div class="field-body">
+            <p>
+              {{#if project.githubUrl}}
+                <a href="{{project.githubUrl}}">{{project.githubUrl}}</a>
+              {{else}}
+                No GitHub URL
+              {{/if}}
+            </p>
+          </div>
+        </div>
+
+        <!-- Now we need to have a select which allows us to set which platform this project is on -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Platform</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <div class="select">
+                  <select name="platform">
+                    <option>Select platform</option>
+                    <option value="fxhash 1.0" {{#ifEqual project.platform 'fxhash 1.0' }}selected{{/ifEqual}}>fxhash
+                      1.0
+                    </option>
+                    <option value="fxhash 2.0" {{#ifEqual project.platform 'fxhash 2.0' }}selected{{/ifEqual}}>fxhash
+                      2.0
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enter the project ID here, this is the thing that will allow us to grab data from the API-->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Project id</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control is-expanded">
+                <input class="input" type="text" name="projectId" value="{{project.projectId}}">
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <button class="button is-primary">Update</button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
   </section>
 
