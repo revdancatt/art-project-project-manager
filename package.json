@@ -1,0 +1,31 @@
+{
+  "name": "art-project-project-manager",
+  "version": "0.0.1",
+  "description": "A tool to manage my art projects",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://revdancatt@github.com/revdancatt/art-project-project-manager.git"
+  },
+  "keywords": [
+    "aaaaggggh"
+  ],
+  "author": "revdancatt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/revdancatt/art-project-project-manager/issues"
+  },
+  "homepage": "https://github.com/revdancatt/art-project-project-manager#readme",
+  "devDependencies": {
+    "standard": "^17.1.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-handlebars": "^7.0.7",
+    "moment": "^2.29.4"
+  }
+}
