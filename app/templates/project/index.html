@@ -106,13 +106,47 @@
           </div>
         </div>
 
+        <!--- See if we have an api entry, if so say when it was last updated, otherwise say we don't have anything -->
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">API</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              {{#if project.api}}
+                Last updated: {{timeAgo project.api.lastUpdated}}
+                {{{dumpJSON project.api.data}}}
+              {{else}}
+                No api fetched yet
+              {{/if}}
+            </div>
+          </div>
+        </div>
+
         <div class="field is-horizontal">
           <div class="field-label is-normal">
           </div>
           <div class="field-body">
             <div class="field">
               <p class="control">
-                <button class="button is-primary">Update</button>
+                {{#if project.api}}
+                  <button class="button is-link" name="action" value="fetchAPI">Refetch API</button>
+                {{else}}
+                  <button class="button is-link" name="action" value="fetchAPI">Fetch API</button>
+                {{/if}}
+              </p>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <button class="button is-primary" name="action" value="update">Update</button>
               </p>
             </div>
           </div>

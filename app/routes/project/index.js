@@ -19,18 +19,55 @@ exports.index = async (req, res) => {
 
   // Check to see if we have been 'POST'ed to
   if (req.method === 'POST') {
-    // If we've been passed the localDirectory then update the project object
-    if (req.body.localDirectory) project.localDirectory = req.body.localDirectory
-    // If we've been passed 'platform' and it's not 'Select platform' then update the project object
-    if (req.body.platform && req.body.platform !== 'Select platform') project.platform = req.body.platform
-    // If we have a projectId then update the project object
-    if (req.body.projectId) project.projectId = req.body.projectId
-    // Save the project object back to the projects file
-    projectsJSON[req.params.projectName] = project
-    // Write the projects file back to disk
-    fs.writeFileSync(projectsFile, JSON.stringify(projectsJSON, null, 2), 'utf-8')
-    // Redirect to the project page
-    return res.redirect(`/project/${req.params.projectName}`)
+    // If we're just updating the information, do that here
+    if (req.body.action === 'update') {
+      // If we've been passed the localDirectory then update the project object
+      if (req.body.localDirectory) project.localDirectory = req.body.localDirectory
+      // If we've been passed 'platform' and it's not 'Select platform' then update the project object
+      if (req.body.platform && req.body.platform !== 'Select platform') project.platform = req.body.platform
+      // If we have a projectId then update the project object
+      if (req.body.projectId) project.projectId = req.body.projectId
+      // Save the project object back to the projects file
+      projectsJSON[req.params.projectName] = project
+      // Write the projects file back to disk
+      fs.writeFileSync(projectsFile, JSON.stringify(projectsJSON, null, 2), 'utf-8')
+      // Redirect to the project page
+      return res.redirect(`/project/${req.params.projectName}`)
+    }
+
+    // If we're trying to update the API, then do that
+    if (req.body.action === 'fetchAPI') {
+      // If the project is fxhash 1.0 or fxhash 2.0 then we call the API like this
+      if (project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0') {
+        // Add some code in a moment to go fetch the API and update the project object
+        const { default: nodeFetch } = await import('node-fetch')
+        const query = `
+        query {
+          generativeToken(id:${project.projectId}) {
+            name
+          }
+        }`
+        // When we make the first call we'll get back a count of how many objkts there are, we can use this to work out how many times we need to call the API
+        const apiCall = await nodeFetch('https://api.fxhash.xyz/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        })
+        const apiResponse = await apiCall.json()
+        // If there isn't an api node in the project object then create it
+        if (!project.api) project.api = {}
+        // Set the lastUpdated value
+        project.api.lastUpdated = new Date().getTime()
+        // set the data value
+        project.api.data = apiResponse.data.generativeToken
+        // Save the project object back to the projects file
+        projectsJSON[req.params.projectName] = project
+        // Write the projects file back to disk
+        fs.writeFileSync(projectsFile, JSON.stringify(projectsJSON, null, 2), 'utf-8')
+      }
+      // Redirect to the project page
+      return res.redirect(`/project/${req.params.projectName}`)
+    }
   }
 
   // Add the project name to the project objects
