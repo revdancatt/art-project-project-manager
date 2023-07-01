@@ -106,6 +106,19 @@
           </div>
         </div>
 
+        {{#if project.url}}
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <label class="label">Link</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <a href="{{project.url}}">{{project.url}}</a>
+              </div>
+            </div>
+          </div>
+        {{/if}}
+
         <!--- See if we have an api entry, if so say when it was last updated, otherwise say we don't have anything -->
         <div class="field is-horizontal">
           <div class="field-label">
@@ -139,6 +152,50 @@
           </div>
         </div>
 
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">index.html</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              {{#if project.indexFileExists}}
+                ✅
+              {{else}}
+                ❌
+              {{/if}}
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">index.html js snippet</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              {{#if project.indexFileHasFxhashScriptNode}}
+                ✅
+              {{else}}
+                ❌
+              {{/if}}
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Snippet up to date</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              {{#if project.indexFileFxhashScriptNodeMatches}}
+                ✅
+              {{else}}
+                ❌
+              {{/if}}
+            </div>
+          </div>
+        </div>
 
         <div class="field is-horizontal">
           <div class="field-label is-normal">

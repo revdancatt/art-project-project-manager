@@ -44,7 +44,39 @@ exports.index = async (req, res) => {
         const query = `
         query {
           generativeToken(id:${project.projectId}) {
+            id
             name
+            slug
+            createdAt
+            displayUri
+            generativeUri
+            objktsCount
+            pricingDutchAuction {
+              decrementDuration
+              finalPrice
+              levels
+              opensAt
+              restingPrice
+            }
+            pricingFixed {
+              opensAt
+              price
+            }
+            paramsDefinition
+            features
+            entireCollection {
+              id
+              name
+              slug
+              createdAt
+              generationHash
+              mintedPrice
+              minter {
+                id
+                name
+              }
+              features
+            }
           }
         }`
         // When we make the first call we'll get back a count of how many objkts there are, we can use this to work out how many times we need to call the API
@@ -58,7 +90,13 @@ exports.index = async (req, res) => {
         if (!project.api) project.api = {}
         // Set the lastUpdated value
         project.api.lastUpdated = new Date().getTime()
-        // set the data value
+        // Put the collection into an api collection node, then delete it from the main data node
+        project.api.collection = apiResponse.data.generativeToken.entireCollection
+        delete apiResponse.data.generativeToken.entireCollection
+        // Now put the features into an api features node, then delete it from the main data node
+        project.api.features = apiResponse.data.generativeToken.features
+        delete apiResponse.data.generativeToken.features
+        // Put the rest of the data into the api data node
         project.api.data = apiResponse.data.generativeToken
         // Save the project object back to the projects file
         projectsJSON[req.params.projectName] = project
@@ -72,6 +110,9 @@ exports.index = async (req, res) => {
 
   // Add the project name to the project objects
   project.name = req.params.projectName
+
+  // Work out the url to the project page on the platform
+  if (project.platform === 'fxhash 1.0') project.url = `https://fxhash.xyz/generative/${project.projectId}`
 
   // If we have a localDirectory and it exists then do local directory stuff
   if (project.localDirectory && fs.existsSync(project.localDirectory)) {
@@ -103,6 +144,33 @@ exports.index = async (req, res) => {
             // Add https:// back to the url
             project.githubUrl = `https://${project.githubUrl}`
           }
+        }
+      }
+    }
+
+    // If we are an fxhash project, then I want to check to see if I need to update the source code, we're going
+    // to do a bunch of check here, first we're going to look to see if an index.html file exists and if it has
+    // an fxhash script node in it.
+    if (project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0') {
+      // Check to see if the index.html file exists
+      const indexFile = path.join(project.localDirectory, 'index.html')
+      project.indexFileExists = fs.existsSync(indexFile)
+      if (project.indexFileExists) {
+        // Read in the contents of the index.html file, remove all the tabs and spaces
+        const indexFileContents = fs.readFileSync(indexFile, 'utf-8').replace(/\t/g, '').replace(/\n/g, '').replace(/\s/g, '')
+        // Check to see if the index.html file has an fxhash script node in it, by searching for '<script id="fxhash-snippet">'
+        project.indexFileHasFxhashScriptNode = indexFileContents.indexOf('<scriptid="fxhash-snippet">') !== -1
+        // If it does we need to check to see if the contents of the fxhash script node match the contents of the fxhash script file
+        // in the codeFragments directory
+        if (project.indexFileHasFxhashScriptNode) {
+          // Grab everything from the fxhash script node to the closing script node, including the closing script node
+          const fxhashScriptNode = indexFileContents.substring(indexFileContents.indexOf('<scriptid="fxhash-snippet">'), indexFileContents.indexOf('</script>', indexFileContents.indexOf('<script id="fxhash-snippet">')) + 9)
+          // Read in the contents of the fxhash script file
+          let fxhashScriptFile = path.join(__dirname, '../../../codeFragments/fxhash-v1-snippet.html')
+          if (project.platform === 'fxhash 2.0') fxhashScriptFile = path.join(__dirname, '../../../codeFragments/fxhash-v2-snippet.html')
+          const fxhashScriptFileContents = fs.readFileSync(fxhashScriptFile, 'utf-8').replace(/\t/g, '').replace(/\n/g, '').replace(/\s/g, '')
+          // If the contents of the fxhash script node don't match the contents of the fxhash script file then we need to set that flag
+          project.indexFileFxhashScriptNodeMatches = fxhashScriptNode === fxhashScriptFileContents
         }
       }
     }
