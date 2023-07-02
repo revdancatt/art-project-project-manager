@@ -21,12 +21,34 @@ exports.index = async (req, res) => {
   if (req.method === 'POST') {
     // If we're just updating the information, do that here
     if (req.body.action === 'update') {
+      // Check to see if we have an appData.json file, if so load it up
+      let appData = {}
+      const appDataFile = path.join(dataDir, 'appData.json')
+      if (fs.existsSync(appDataFile)) appData = JSON.parse(fs.readFileSync(appDataFile, 'utf-8'))
+
       // If we've been passed the localDirectory then update the project object
       if (req.body.localDirectory) project.localDirectory = req.body.localDirectory
       // If we've been passed 'platform' and it's not 'Select platform' then update the project object
       if (req.body.platform && req.body.platform !== 'Select platform') project.platform = req.body.platform
       // If we have a projectId then update the project object
       if (req.body.projectId) project.projectId = req.body.projectId
+      // If we have a projectDir record it, this is where it lives on revdancatt.com
+      if (req.body.projectDir) {
+        project.projectDir = req.body.projectDir
+        // If we have the revdancattdotcom root directory in the appData then make sure we have the projectDir in there
+        // along with the image folders it needs
+        if (appData.revdancattRootDir) {
+          const projectDir = path.join(appData.revdancattRootDir, 'app/public/imgs/projects', project.projectDir)
+          if (!fs.existsSync(projectDir)) fs.mkdirSync(projectDir)
+          // Make sure the highres, slides and thumbnails folders exist
+          const highresDir = path.join(projectDir, 'highres')
+          if (!fs.existsSync(highresDir)) fs.mkdirSync(highresDir)
+          const slidesDir = path.join(projectDir, 'slides')
+          if (!fs.existsSync(slidesDir)) fs.mkdirSync(slidesDir)
+          const thumbnailsDir = path.join(projectDir, 'thumbnails')
+          if (!fs.existsSync(thumbnailsDir)) fs.mkdirSync(thumbnailsDir)
+        }
+      }
       // Save the project object back to the projects file
       projectsJSON[req.params.projectName] = project
       // Write the projects file back to disk
@@ -51,6 +73,7 @@ exports.index = async (req, res) => {
             displayUri
             generativeUri
             objktsCount
+            metadata
             pricingDutchAuction {
               decrementDuration
               finalPrice
