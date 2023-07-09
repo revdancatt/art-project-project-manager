@@ -12,7 +12,7 @@
     <div class="hero-body shader">
       <div class="container">
         <p class="title is-size-1 has-text-weight-bold mb-0">
-          Art Manager - {{project.name}}
+          Art Manager - Collage - {{project.name}}
         </p>
         <p class="subtitle has-text-weight-bold pt-5">
           Helping me keep track of all the things
@@ -85,6 +85,7 @@
                     <option value="fxhash 2.0" {{#ifEqual project.platform 'fxhash 2.0' }}selected{{/ifEqual}}>fxhash
                       2.0
                     </option>
+                    <option value="Alba" {{#ifEqual project.platform 'Alba' }}selected{{/ifEqual}}>Alba</option>
                   </select>
                 </div>
               </div>
@@ -120,82 +121,86 @@
         {{/if}}
 
         <!--- See if we have an api entry, if so say when it was last updated, otherwise say we don't have anything -->
-        <div class="field is-horizontal">
-          <div class="field-label">
-            <label class="label">API</label>
-          </div>
-          <div class="field-body">
-            <div class="field">
-              {{#if project.api}}
-                Last updated: {{timeAgo project.api.lastUpdated}}
-                {{{dumpJSON project.api.data}}}
-              {{else}}
-                No api fetched yet
-              {{/if}}
+        {{#if canFetchApi}}
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <label class="label">API</label>
             </div>
-          </div>
-        </div>
-
-        <div class="field is-horizontal">
-          <div class="field-label is-normal">
-          </div>
-          <div class="field-body">
-            <div class="field">
-              <p class="control">
+            <div class="field-body">
+              <div class="field">
                 {{#if project.api}}
-                  <button class="button is-link" name="action" value="fetchAPI">Refetch API</button>
+                  Last updated: {{timeAgo project.api.lastUpdated}}
+                  {{{dumpJSON project.api.data}}}
                 {{else}}
-                  <button class="button is-link" name="action" value="fetchAPI">Fetch API</button>
+                  No api fetched yet
                 {{/if}}
-              </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="field is-horizontal">
-          <div class="field-label">
-            <label class="label">index.html</label>
-          </div>
-          <div class="field-body">
-            <div class="field">
-              {{#if project.indexFileExists}}
-                ✅
-              {{else}}
-                ❌
-              {{/if}}
+          <div class="field is-horizontal">
+            <div class="field-label is-normal">
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <p class="control">
+                  {{#if project.api}}
+                    <button class="button is-link" name="action" value="fetchAPI">Refetch API</button>
+                  {{else}}
+                    <button class="button is-link" name="action" value="fetchAPI">Fetch API</button>
+                  {{/if}}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        {{/if}}
 
-        <div class="field is-horizontal">
-          <div class="field-label">
-            <label class="label">index.html js snippet</label>
-          </div>
-          <div class="field-body">
-            <div class="field">
-              {{#if project.indexFileHasFxhashScriptNode}}
-                ✅
-              {{else}}
-                ❌
-              {{/if}}
+        {{#if platform}}
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <label class="label">index.html</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                {{#if project.indexFileExists}}
+                  ✅
+                {{else}}
+                  ❌
+                {{/if}}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="field is-horizontal">
-          <div class="field-label">
-            <label class="label">Snippet up to date</label>
-          </div>
-          <div class="field-body">
-            <div class="field">
-              {{#if project.indexFileFxhashScriptNodeMatches}}
-                ✅
-              {{else}}
-                ❌
-              {{/if}}
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <label class="label">index.html js snippet</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                {{#if project.indexFileHasFxhashScriptNode}}
+                  ✅
+                {{else}}
+                  ❌
+                {{/if}}
+              </div>
             </div>
           </div>
-        </div>
+
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <label class="label">Snippet up to date</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                {{#if project.indexFileFxhashScriptNodeMatches}}
+                  ✅
+                {{else}}
+                  ❌
+                {{/if}}
+              </div>
+            </div>
+          </div>
+        {{/if}}
 
         <div class="field is-horizontal">
           <div class="field-label is-normal">
@@ -216,9 +221,12 @@
           <div class="field-label is-normal">
           </div>
           <div class="field-body">
-            <div class="field">
+            <div class="field is-grouped">
               <p class="control">
                 <button class="button is-primary" name="action" value="update">Update</button>
+              </p>
+              <p class="control">
+                <button class="button is-link" name="action" value="collage">Collage</button>
               </p>
             </div>
           </div>
@@ -228,6 +236,7 @@
   </section>
 
   {{> footer}}
+
 </body>
 
 </html>

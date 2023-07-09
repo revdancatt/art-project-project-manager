@@ -21,5 +21,6 @@ router.post('/', main.index)
 router.get('/projects', projects.index)
 router.get('/project/:projectName', project.index)
 router.post('/project/:projectName', project.index)
+router.get('/project/:projectName/collage', project.collage)
 
 module.exports = router

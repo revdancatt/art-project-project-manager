@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en-US">
+
+<head>
+  {{> head}}
+</head>
+
+<body>
+  {{> nav}}
+
+  <section class="hero is-primary">
+    <div class="hero-body shader">
+      <div class="container">
+        <p class="title is-size-1 has-text-weight-bold mb-0">
+          Art Manager - {{project.name}}
+        </p>
+        <p class="subtitle has-text-weight-bold pt-5">
+          Helping me keep track of all the things
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section has-background-white-ter" style="padding: 1rem 1.5rem">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/projects">Projects</a></li>
+          <li><a href="/projects/{{project.name}}">{{project.name}}</a></li>
+          <li class="is-active"><a href="#" aria-current="page">Collage</a></li>
+        </ul>
+      </nav>
+    </div>
+  </section>
+
+  <section class="section has-background-white">
+    <div class="container">
+      <h1 class="title">{{project.name}}</h1>
+      {{#if displayInColumns}}
+        <div class="columns">
+          <div class="column">
+            <figure class="image block">
+              <a href="/collages/{{filenames.[0]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[0]}}">
+              </a>
+            </figure>
+            <figure class="image block">
+              <a href="/collages/{{filenames.[3]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[3]}}">
+              </a>
+            </figure>
+            <figure class="image block">
+              <a href="/collages/{{filenames.[6]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[6]}}">
+              </a>
+            </figure>
+            <figure class="image block">
+              <a href="/collages/{{filenames.[9]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[9]}}">
+              </a>
+            </figure>
+          </div>
+
+          <div class="column">
+            <figure class="image block">
+              <a href="/collages/{{filenames.[1]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[1]}}">
+              </a>
+            </figure>
+            <figure class="image block">
+              <a href="/collages/{{filenames.[4]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[4]}}">
+              </a>
+            </figure>
+            <figure class="image block">
+              <a href="/collages/{{filenames.[7]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[7]}}">
+              </a>
+            </figure>
+            <figure class="image block">
+              <a href="/collages/{{filenames.[10]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[10]}}">
+              </a>
+            </figure>
+          </div>
+
+          <div class="column">
+            <figure class="image block">
+              <a href="/collages/{{filenames.[2]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[2]}}">
+              </a>
+            </figure>
+            <figure class="image block">
+              <a href="/collages/{{filenames.[5]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[5]}}">
+              </a>
+            </figure>
+            <figure class="image block">
+              <a href="/collages/{{filenames.[8]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[8]}}">
+              </a>
+            </figure>
+            <figure class="image block">
+              <a href="/collages/{{filenames.[11]}}" target="_blank">
+                <img class="is-fullwidth" src="/collages/{{filenames.[11]}}">
+              </a>
+            </figure>
+          </div>
+        </div>
+      {{/if}}
+    </div>
+  </section>
+
+  {{> footer}}
+
+</body>
+
+</html>
