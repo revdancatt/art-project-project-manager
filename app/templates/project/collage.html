@@ -3,6 +3,13 @@
 
 <head>
   {{> head}}
+  <!-- Add a style called checkerboard that has the checkerboard png as a repeat background image -->
+  <style>
+    .checkerboard {
+      background-image: url("/imgs/checkerboard.png");
+      background-repeat: repeat;
+    }
+  </style>
 </head>
 
 <body>
@@ -37,77 +44,322 @@
   <section class="section has-background-white">
     <div class="container">
       <h1 class="title">{{project.name}}</h1>
-      {{#if displayInColumns}}
-        <div class="columns">
-          <div class="column">
-            <figure class="image block">
+      <form action="/project/{{project.name}}/collage" method="POST">
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            Type
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+              <div class="select">
+                <select name="type">
+                  <option value="columns" {{#ifEqual settings.type 'columns' }}selected{{/ifEqual}}>Columns</option>
+                  <option value="videoSlide" {{#ifEqual settings.type 'videoSlide' }}selected{{/ifEqual}}>Video Slide
+                  </option>
+                </select>
+              </div>
+              </p>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            Columns
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+              <div class="select">
+                <select name="columns">
+                  <option value="2" {{#ifEqual settings.columns 2}}selected{{/ifEqual}}>2</option>
+                  <option value="3" {{#ifEqual settings.columns 3}}selected{{/ifEqual}}>3</option>
+                  <option value="4" {{#ifEqual settings.columns 4}}selected{{/ifEqual}}>4</option>
+                  <option value="5" {{#ifEqual settings.columns 5}}selected{{/ifEqual}}>5</option>
+                  <option value="6" {{#ifEqual settings.columns 6}}selected{{/ifEqual}}>6</option>
+                  <option value="7" {{#ifEqual settings.columns 7}}selected{{/ifEqual}}>7</option>
+                  <option value="8" {{#ifEqual settings.columns 8}}selected{{/ifEqual}}>8</option>
+                  <option value="9" {{#ifEqual settings.columns 9}}selected{{/ifEqual}}>9</option>
+                  <option value="10" {{#ifEqual settings.columns 10}}selected{{/ifEqual}}>10</option>
+                  <option value="11" {{#ifEqual settings.columns 11}}selected{{/ifEqual}}>11</option>
+                  <option value="12" {{#ifEqual settings.columns 12}}selected{{/ifEqual}}>12</option>
+                </select>
+              </div>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            Stagger
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+              <div class="select">
+                <select name="stagger">
+                  <option value="none" {{#ifEqual settings.step 'none' }}selected{{/ifEqual}}>None</option>
+                  <option value="half" {{#ifEqual settings.step 'half' }}selected{{/ifEqual}}>Half</option>
+                  <option value="third" {{#ifEqual settings.step 'third' }}selected{{/ifEqual}}>Third</option>
+                  <option value="quarter" {{#ifEqual settings.step 'quarter' }}selected{{/ifEqual}}>Quarter</option>
+                </select>
+              </div>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            Angle
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+              <div class="select">
+                <select name="angle">
+                  <option value="0" selected>0</option>
+                  <option value="10" {{#ifEqual settings.angle 10}}selected{{/ifEqual}}>10</option>
+                  <option value="30" {{#ifEqual settings.angle 30}}selected{{/ifEqual}}>30</option>
+                  <option value="45" {{#ifEqual settings.angle 45}}selected{{/ifEqual}}>45</option>
+                </select>
+              </div>
+              </p>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="field is-horizontal">
+          <div class="field-label">
+            Offset
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <input name="offset" value="true" type="checkbox" {{#ifEqual settings.offset true}}checked{{/ifEqual}}>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            Force id
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <input class="input" name="id" value="{{settings.forceId}}" placeholder="Force a single id" type="text">
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            Width
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <input class="input" name="width" value="{{settings.width}}" type="text">
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            Ratio
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <input class="input" name="ratio" value="{{settings.displayRatio}}" type="text">
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label">
+            High-res
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <input name="highres" value="true" type="checkbox" {{#ifEqual settings.highres
+                  true}}checked{{/ifEqual}}>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+          </div>
+          <div class="field-body">
+            <div class="field is-grouped">
+              <p class="control">
+                <button class="button is-primary" name="action" value="update">Update</button>
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </form>
+
+      <hr />
+
+
+      {{#if displayMoreThanOne}}
+        {{#if displayInColumns}}
+          <div class="columns">
+            <div class="column">
+              <div class="card">
+                <div class="card-image">
+                  <figure class="image block checkerboard">
+                    <a href="/collages/{{filenames.[0]}}" target="_blank">
+                      <img class="is-fullwidth" src="/collages/{{filenames.[0]}}">
+                    </a>
+                  </figure>
+                </div>
+              </div>
+              <br />
+              <div class="card">
+                <div class="card-image">
+                  <figure class="image block checkerboard">
+                    <a href="/collages/{{filenames.[3]}}" target="_blank">
+                      <img class="is-fullwidth" src="/collages/{{filenames.[3]}}">
+                    </a>
+                  </figure>
+                </div>
+              </div>
+            </div>
+
+            <div class="column">
+              <div class="card">
+                <div class="card-image">
+                  <figure class="image block checkerboard">
+                    <a href="/collages/{{filenames.[1]}}" target="_blank">
+                      <img class="is-fullwidth" src="/collages/{{filenames.[1]}}">
+                    </a>
+                  </figure>
+                </div>
+              </div>
+              <br />
+              <div class="card">
+                <div class="card-image">
+                  <figure class="image block checkerboard">
+                    <a href="/collages/{{filenames.[4]}}" target="_blank">
+                      <img class="is-fullwidth" src="/collages/{{filenames.[4]}}">
+                    </a>
+                  </figure>
+                </div>
+              </div>
+            </div>
+
+            <div class="column">
+              <div class="card">
+                <div class="card-image">
+                  <figure class="image block checkerboard">
+                    <a href="/collages/{{filenames.[2]}}" target="_blank">
+                      <img class="is-fullwidth" src="/collages/{{filenames.[2]}}">
+                    </a>
+                  </figure>
+                </div>
+              </div>
+              <br />
+              <div class="card">
+                <div class="card-image">
+                  <figure class="image block checkerboard">
+                    <a href="/collages/{{filenames.[5]}}" target="_blank">
+                      <img class="is-fullwidth" src="/collages/{{filenames.[5]}}">
+                    </a>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        {{else}}
+          <div class="card">
+            <div class="card-image">
+              <figure class="image block checkerboard">
+                <a href="/collages/{{filenames.[0]}}" target="_blank">
+                  <img class="is-fullwidth" src="/collages/{{filenames.[0]}}">
+                </a>
+              </figure>
+            </div>
+          </div>
+          <br />
+          <div class="card">
+            <div class="card-image">
+              <figure class="image block checkerboard">
+                <a href="/collages/{{filenames.[1]}}" target="_blank">
+                  <img class="is-fullwidth" src="/collages/{{filenames.[1]}}">
+                </a>
+              </figure>
+            </div>
+          </div>
+          <br />
+          <div class="card">
+            <div class="card-image">
+              <figure class="image block checkerboard">
+                <a href="/collages/{{filenames.[2]}}" target="_blank">
+                  <img class="is-fullwidth" src="/collages/{{filenames.[2]}}">
+                </a>
+              </figure>
+            </div>
+          </div>
+          <br />
+          <div class="card">
+            <div class="card-image">
+              <figure class="image block checkerboard">
+                <a href="/collages/{{filenames.[3]}}" target="_blank">
+                  <img class="is-fullwidth" src="/collages/{{filenames.[3]}}">
+                </a>
+              </figure>
+            </div>
+          </div>
+          <br />
+          <div class="card">
+            <div class="card-image">
+              <figure class="image block checkerboard">
+                <a href="/collages/{{filenames.[4]}}" target="_blank">
+                  <img class="is-fullwidth" src="/collages/{{filenames.[4]}}">
+                </a>
+              </figure>
+            </div>
+          </div>
+          <br />
+          <div class="card">
+            <div class="card-image">
+              <figure class="image block checkerboard">
+                <a href="/collages/{{filenames.[5]}}" target="_blank">
+                  <img class="is-fullwidth" src="/collages/{{filenames.[5]}}">
+                </a>
+              </figure>
+            </div>
+          </div>
+          <br />
+
+        {{/if}}
+      {{else}}
+        <div class="card">
+          <div class="card-image">
+            <figure class="image block checkerboard">
               <a href="/collages/{{filenames.[0]}}" target="_blank">
                 <img class="is-fullwidth" src="/collages/{{filenames.[0]}}">
               </a>
             </figure>
-            <figure class="image block">
-              <a href="/collages/{{filenames.[3]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[3]}}">
-              </a>
-            </figure>
-            <figure class="image block">
-              <a href="/collages/{{filenames.[6]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[6]}}">
-              </a>
-            </figure>
-            <figure class="image block">
-              <a href="/collages/{{filenames.[9]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[9]}}">
-              </a>
-            </figure>
-          </div>
-
-          <div class="column">
-            <figure class="image block">
-              <a href="/collages/{{filenames.[1]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[1]}}">
-              </a>
-            </figure>
-            <figure class="image block">
-              <a href="/collages/{{filenames.[4]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[4]}}">
-              </a>
-            </figure>
-            <figure class="image block">
-              <a href="/collages/{{filenames.[7]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[7]}}">
-              </a>
-            </figure>
-            <figure class="image block">
-              <a href="/collages/{{filenames.[10]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[10]}}">
-              </a>
-            </figure>
-          </div>
-
-          <div class="column">
-            <figure class="image block">
-              <a href="/collages/{{filenames.[2]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[2]}}">
-              </a>
-            </figure>
-            <figure class="image block">
-              <a href="/collages/{{filenames.[5]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[5]}}">
-              </a>
-            </figure>
-            <figure class="image block">
-              <a href="/collages/{{filenames.[8]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[8]}}">
-              </a>
-            </figure>
-            <figure class="image block">
-              <a href="/collages/{{filenames.[11]}}" target="_blank">
-                <img class="is-fullwidth" src="/collages/{{filenames.[11]}}">
-              </a>
-            </figure>
           </div>
         </div>
+        <br />
       {{/if}}
     </div>
   </section>

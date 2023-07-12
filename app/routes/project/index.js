@@ -205,11 +205,11 @@ exports.index = async (req, res) => {
     }
   }
 
-  req.platform = {
+  req.templateValues.platform = {
     isAlba: project.platform === 'Alba',
     isFxhash: project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0'
   }
-  req.canFetchApi = project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0'
+  req.templateValues.canFetchApi = project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0'
 
   // Add the project to the template values
   req.templateValues.project = project
@@ -242,26 +242,55 @@ exports.collage = async (req, res) => {
     step: null,
     width: 1920,
     columns: 4,
+    angle: 0,
     ratio: null,
-    offset: false
+    offset: false,
+    highres: false,
+    forceId: null
   }
 
   // Grab the query string values
-  const query = req.query
-  if (query.type) settings.type = query.type
-  if (query.step) settings.step = query.step
-  if (query.width) settings.width = parseInt(query.width)
-  if (query.columns) settings.columns = parseInt(query.columns)
-  if (query.ratio) settings.ratio = parseFloat(query.ratio)
-  if (query.offset && query.offset === 'true') settings.offset = true
+  const body = req.body
+  // console.log(req.body)
+  if (body.type) settings.type = body.type
+  if (body.stagger) settings.step = body.stagger
+  if (body.width) settings.width = parseInt(body.width)
+  if (body.columns) settings.columns = parseInt(body.columns)
+  if (body.angle) settings.angle = parseInt(body.angle)
+  if (body.ratio) {
+    // If there's a ':' in the ratio and then calculate the ratio from that
+    if (body.ratio.indexOf(':') !== -1) {
+      const ratioParts = body.ratio.split(':')
+      settings.ratio = parseFloat(ratioParts[0]) / parseFloat(ratioParts[1])
+      settings.displayRatio = `${ratioParts[0]}:${ratioParts[1]}`
+    } else {
+      settings.ratio = parseFloat(body.ratio)
+      settings.displayRatio = body.ratio
+    }
+  }
+  if (body.offset && body.offset === 'true') settings.offset = true
+  if (body.highres && body.highres === 'true') settings.highres = true
+  if (body.id && body.id !== '') settings.forceId = parseInt(body.id)
 
   // Go grab the thumbnails for the project based on the projectDir and the appData
   // Load in the appData first
   const appData = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../data/appData.json'), 'utf-8'))
   // Make the path to the project directory on revdancatt.com
-  const thumbnailDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'thumbnails')
+  let thumbnailDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'thumbnails')
+  // If we are in highres mode then use the highres directory
+  if (settings.highres) thumbnailDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'highres')
   // Grab the contents of the directory filtering for .jpg files
-  const thumbnails = fs.readdirSync(thumbnailDir).filter(file => file.indexOf('.jpg') !== -1)
+  let thumbnails = fs.readdirSync(thumbnailDir).filter(file => file.indexOf('.jpg') !== -1)
+
+  // If we have a forceId then we want to filter the thumbnails to just that one
+  if (settings.forceId !== null) {
+    // Turn the id into a string padded with 0s
+    let paddedId = settings.forceId.toString().padStart(4, '0')
+    // Add an underscore to the start and end of the paddedId
+    paddedId = `_${paddedId}_`
+    // Filter the thumbnails to just the one that matches the paddedId
+    thumbnails = thumbnails.filter(file => file.indexOf(paddedId) !== -1)
+  }
 
   // We want to know the dimension of the first image, so we'll grab that then get the image size
   const {
@@ -274,13 +303,16 @@ exports.collage = async (req, res) => {
   // If the settings.ratio is null, then we want the ratio to be the same as the first image
   if (settings.ratio === null) {
     settings.ratio = dimensions.width / dimensions.height
-    // Work out the new height based on the width and the ratio
-    settings.height = Math.round(settings.width / settings.ratio)
   }
+  // If the ratio is set then we want the height to be based on the width and the ratio
+  settings.height = Math.round(settings.width / settings.ratio)
 
   // Create a new canvas based on the width and height
   const canvas = createCanvas(settings.width, settings.height)
   const ctx = canvas.getContext('2d')
+  // Load in the font we are going to use to write on the canvas,
+  // it is 'Futura Condensed Medium'
+  ctx.font = `${settings.height * 0.02}px Futura`
 
   // set the collage output directory
   const collageDir = path.join(__dirname, '../../public/collages')
@@ -289,7 +321,18 @@ exports.collage = async (req, res) => {
 
   // We are going to make a number of collages, so we'll loop through them
   const filenames = []
-  for (let c = 0; c < 12; c++) {
+  let samples = 6
+  if (settings.forceId) samples = 1
+  let image = null
+  if (samples === 1) image = await loadImage(path.join(thumbnailDir, thumbnails[0]))
+
+  // Loop through the number of samples we want to make
+  // but do it as a each loop so we can await the image loading
+  // Make an array of the number of samples we want to make, numbered 0 to samples
+  const sampleArray = [...Array(samples).keys()]
+  console.log('sampleArray', sampleArray)
+  for (const c of sampleArray) {
+  // for (let c = 0; c < samples; c++) {
     // Do a proper inline shuffle of the thumbnails, without using a function
     for (let i = thumbnails.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
@@ -304,22 +347,24 @@ exports.collage = async (req, res) => {
     ctx.save()
     // Translate the canvas to the centre of the canvas
     ctx.translate(settings.width / 2, settings.height / 2)
+    // Rotate the canvas by the angle
+    ctx.rotate(-settings.angle * Math.PI / 180)
 
-    const startAt = -1
-    const endAt = settings.columns + 2
+    const startAt = -4
+    const endAt = settings.columns + 4
     // If we are doing columns then...
     if (settings.type === 'columns') {
       // work out the new target size
       const targetWidth = Math.round(settings.width / settings.columns)
-      const targetHeight = Math.round(targetWidth / settings.ratio)
+      const targetHeight = Math.round(targetWidth / dimensions.width * dimensions.height)
       let xOffset = 0
       if (settings.offset) xOffset = targetWidth / 2
 
-      // The stepper values starts at the distance from startAt and zero in Absolute terms
-      let stepper = -1
-      if (settings.step === 'half') stepper = -1
-      if (settings.step === 'third') stepper = -1
-      if (settings.step === 'quarter') stepper = -1
+      // The stagger values starts at the distance from startAt and zero in Absolute terms
+      let stagger = startAt
+      if (settings.step === 'half') stagger = startAt
+      if (settings.step === 'third') stagger = startAt
+      if (settings.step === 'quarter') stagger = startAt
 
       let stepDivider = 1
       if (settings.step === 'half') stepDivider = 2
@@ -330,19 +375,21 @@ exports.collage = async (req, res) => {
       for (let i = startAt; i < endAt; i++) {
         let yOffset = 0
         // If we are doing offset columns then we want to offset the rows by half the height of the target on odd columns
-        yOffset = targetHeight / stepDivider * stepper
+        yOffset = targetHeight / stepDivider * stagger
         if (settings.offset) yOffset -= targetHeight / 2
 
-        stepper++
-        if (settings.step === null) stepper = 0
-        if (settings.step === 'half' && stepper > 1) stepper = 0
-        if (settings.step === 'third' && stepper > 2) stepper = 0
-        if (settings.step === 'quarter' && stepper > 3) stepper = 0
+        stagger++
+        if (settings.step === null || settings.step === 'none') stagger = 0
+        if (settings.step === 'half' && stagger > 1) stagger = 0
+        if (settings.step === 'third' && stagger > 2) stagger = 0
+        if (settings.step === 'quarter' && stagger > 3) stagger = 0
 
         // Now we are going to loop down the rows, which will be the same number as the columns
         for (let j = startAt; j < endAt; j++) {
           // Load in the image
-          const image = await loadImage(path.join(thumbnailDir, thumbnails[thumbnailPointer]))
+          if (samples > 1) {
+            image = await loadImage(path.join(thumbnailDir, thumbnails[thumbnailPointer]))
+          }
           // Draw the image to the canvas, remembering to offset by half the width and height
           ctx.drawImage(image, i * targetWidth - (settings.width / 2) + xOffset, j * targetHeight - (settings.height / 2) + yOffset, targetWidth, targetHeight)
           // Increment the thumbnail pointer
@@ -351,6 +398,70 @@ exports.collage = async (req, res) => {
           if (thumbnailPointer >= thumbnails.length) thumbnailPointer = 0
         }
       }
+    }
+
+    // If we are doing a video slide then do that
+    if (settings.type === 'videoSlide') {
+      // Colour in the right half of the canvas with an off grey
+      ctx.fillStyle = '#E0E0E0'
+      ctx.fillRect(0, -settings.height / 2, settings.width / 2, settings.height)
+      // Now I want to work out the best way to fit the image into the right half of the canvas
+      // I want it to either take up 90% of the height, so it doesn't take more than 90% of the width
+      // If it can't do that then we want it to take up 85% of the width, so it doesn't take more than 90% of the height
+      const smallerHeight = settings.height * 0.85
+      const smallerWidth = settings.width / 2 * 0.85
+      // First we set the smaller target height to be the smaller height
+      let smallerTargetHeight = smallerHeight
+      // Then calculate what the new width of the image would be if we used the smaller height
+      // based on the dimensions of the image
+      let smallerTargetWidth = Math.round(smallerTargetHeight / dimensions.height * dimensions.width)
+      // If the smallerTargetWidth is greater than the smallerWidth then we need to use the smallerWidth
+      if (smallerTargetWidth > smallerWidth) {
+        smallerTargetWidth = smallerWidth
+        smallerTargetHeight = Math.round(smallerWidth / dimensions.width * dimensions.height)
+      }
+      // Now that we have that draw a stroke line with rounded corners around the image where
+      // the image is going to go, centered in the right half of the canvas
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.02'
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+
+      // Work out where the top left corner of the image is going to be
+      const topLeftX = (settings.width / 2 - smallerTargetWidth) / 2
+      const topLeftY = ((settings.height - smallerTargetHeight) / 2) - (settings.height / 2)
+      // Draw the rounded rectangle
+      ctx.beginPath()
+      ctx.moveTo(topLeftX, topLeftY)
+      ctx.lineTo(topLeftX + smallerTargetWidth, topLeftY)
+      ctx.lineTo(topLeftX + smallerTargetWidth, topLeftY + smallerTargetHeight)
+      ctx.lineTo(topLeftX, topLeftY + smallerTargetHeight)
+      ctx.lineTo(topLeftX, topLeftY)
+      ctx.lineWidth = settings.width / 50
+      // Now do the stroke 20 times, dividing the stroke width each time
+      for (let i = 0; i < 40; i++) {
+        ctx.stroke()
+        ctx.lineWidth = ctx.lineWidth * 0.8
+      }
+
+      // Load in the image
+      if (samples > 1) {
+        image = await loadImage(path.join(thumbnailDir, thumbnails[thumbnailPointer]))
+      }
+      // Extract the id from the filename
+      const id = parseInt(thumbnails[thumbnailPointer].split('_')[1])
+      console.log(id)
+      // Write the id to the canvas
+      ctx.fillStyle = 'rgba(0, 0, 0, 1)'
+      ctx.textAlign = 'right'
+      ctx.textBaseline = 'top'
+      ctx.fillText(`${project.name} #${id}`, topLeftX + smallerTargetWidth, topLeftY + smallerTargetHeight + (settings.height * 0.01))
+
+      // Draw the image to the canvas in the position of the rounded rectangle
+      ctx.drawImage(image, topLeftX, topLeftY, smallerTargetWidth, smallerTargetHeight)
+      // Increment the thumbnail pointer
+      thumbnailPointer++
+      // If we've run out of thumbnails then reset the pointer
+      if (thumbnailPointer >= thumbnails.length) thumbnailPointer = 0
     }
 
     // Restore the canvas to the saved state
@@ -371,7 +482,9 @@ exports.collage = async (req, res) => {
   }
 
   req.templateValues.settings = settings
-  req.templateValues.displayInColumns = settings.type === 'columns'
+  console.log(settings)
+  req.templateValues.displayInColumns = settings.ratio <= 1
+  req.templateValues.displayMoreThanOne = samples > 1
 
   // Add the project to the template values
   req.templateValues.project = project
