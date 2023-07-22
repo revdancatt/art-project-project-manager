@@ -17,19 +17,22 @@ exports.index = async (req, res) => {
   // Load the project data into the template values
   const project = projectsJSON[req.params.projectName]
 
+  let appData = {}
+  const appDataFile = path.join(dataDir, 'appData.json')
+  if (fs.existsSync(appDataFile)) appData = JSON.parse(fs.readFileSync(appDataFile, 'utf-8'))
+
   // Check to see if we have been 'POST'ed to
   if (req.method === 'POST') {
     // If we're just updating the information, do that here
     if (req.body.action === 'update') {
       // Check to see if we have an appData.json file, if so load it up
-      let appData = {}
-      const appDataFile = path.join(dataDir, 'appData.json')
-      if (fs.existsSync(appDataFile)) appData = JSON.parse(fs.readFileSync(appDataFile, 'utf-8'))
 
       // If we've been passed the localDirectory then update the project object
       if (req.body.localDirectory) project.localDirectory = req.body.localDirectory
       // If we've been passed 'platform' and it's not 'Select platform' then update the project object
       if (req.body.platform && req.body.platform !== 'Select platform') project.platform = req.body.platform
+      // If we've been passed a 'blockchain' then update the project object
+      if (req.body.blockchain && req.body.blockchain !== 'Select blockchain') project.blockchain = req.body.blockchain
       // If we have a projectId then update the project object
       if (req.body.projectId) project.projectId = req.body.projectId
       // If we have a projectDir record it, this is where it lives on revdancatt.com
@@ -142,6 +145,7 @@ exports.index = async (req, res) => {
 
   // Work out the url to the project page on the platform
   if (project.platform === 'fxhash 1.0') project.url = `https://fxhash.xyz/generative/${project.projectId}`
+  if (project.platform === 'fxhash 2.0') project.url = `https://fxhash.xyz/generative/${project.projectId}`
 
   // If we have a localDirectory and it exists then do local directory stuff
   if (project.localDirectory && fs.existsSync(project.localDirectory)) {
@@ -177,16 +181,20 @@ exports.index = async (req, res) => {
       }
     }
 
+    // This will load in the index.html file, it shouldn't matter what the platform is for this bit because we have
+    // common code that works across all platforms
+    const indexFile = path.join(project.localDirectory, 'index.html')
+    project.indexFileExists = fs.existsSync(indexFile)
+    let indexFileContents = ''
+    if (project.indexFileExists) indexFileContents = fs.readFileSync(indexFile, 'utf-8').replace(/\t/g, '').replace(/\n/g, '').replace(/\s/g, '')
+
     // If we are an fxhash project, then I want to check to see if I need to update the source code, we're going
     // to do a bunch of check here, first we're going to look to see if an index.html file exists and if it has
     // an fxhash script node in it.
     if (project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0') {
       // Check to see if the index.html file exists
-      const indexFile = path.join(project.localDirectory, 'index.html')
-      project.indexFileExists = fs.existsSync(indexFile)
       if (project.indexFileExists) {
         // Read in the contents of the index.html file, remove all the tabs and spaces
-        const indexFileContents = fs.readFileSync(indexFile, 'utf-8').replace(/\t/g, '').replace(/\n/g, '').replace(/\s/g, '')
         // Check to see if the index.html file has an fxhash script node in it, by searching for '<script id="fxhash-snippet">'
         project.indexFileHasFxhashScriptNode = indexFileContents.indexOf('<scriptid="fxhash-snippet">') !== -1
         // If it does we need to check to see if the contents of the fxhash script node match the contents of the fxhash script file
@@ -203,13 +211,144 @@ exports.index = async (req, res) => {
         }
       }
     }
+
+    // This will check the index.js file for certain things we need
+    const jsFile = path.join(project.localDirectory, 'index.js')
+    project.jsFileExists = fs.existsSync(jsFile)
+    let jsFileContents = ''
+    if (project.jsFileExists) jsFileContents = fs.readFileSync(jsFile, 'utf-8')
+    // Check to see if "'forceWidth'" and "'forceDownload'" are in the index.js file
+    project.hasForceWidth = jsFileContents.indexOf('forceWidth') !== -1
+    project.hasForceDownload = jsFileContents.indexOf('forceDownload') !== -1
+    project.hasForceId = jsFileContents.indexOf('forceId') !== -1
   }
 
+  // We want to grab all the hashes and ids from the project and put them into an array
+  // how we do this depends on the platform
+  const mints = []
+  let indexOffset = 0
+  if (project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0') {
+    indexOffset = 1
+    // If we have an api node in the project object then we want to use that
+    if (project.api) {
+      // Loop through the collection and add the id and hash to the mints array
+      // because we are on fxhash the id is the same as the index + indexOffset
+      for (let i = 0; i < project.api.collection.length; i++) {
+        mints.push({
+          id: i + indexOffset,
+          hash: project.api.collection[i].generationHash
+        })
+      }
+    }
+  }
+  project.mints = mints
+  project.mintsJSON = JSON.stringify(mints)
+
+  // Do some platform specific stuff
   req.templateValues.platform = {
     isAlba: project.platform === 'Alba',
     isFxhash: project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0'
   }
   req.templateValues.canFetchApi = project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0'
+
+  // Now we want to construct the dataJSON node that would be used on
+  // the revdancatt.com site. This needs to be generated from here
+  // as much as possible, if not then we see if we can read it from
+  // there. Finally we try and grab it from the API
+  let revdancattProjectJSON = {}
+  req.templateValues.hasRevdancattProjectData = false
+  // Look in the data dir of the revdancatt.com site for a projects.json file
+  // const revdancattDataDir = path.join(__dirname, '../../../data')
+  if (appData.revdancattRootDir) {
+    const revdancattProjectFile = path.join(appData.revdancattRootDir, 'data', 'projects.json')
+    if (fs.existsSync(revdancattProjectFile)) {
+      // Load the contents of the projects file
+      const revdancattProjects = JSON.parse(fs.readFileSync(revdancattProjectFile, 'utf-8'))
+      // Loop through the projects
+      // TODO: Grab the project
+      for (const revdancattProject of revdancattProjects) {
+        if (revdancattProject.title === req.params.projectName) {
+          // We have a match, so set the revdancattProjectJSON to this project
+          revdancattProjectJSON = revdancattProject
+        }
+      }
+    }
+  }
+
+  // Set the default values for the new revdancatt project JSON
+  const newRevdancattProjectJSON = {
+    title: null,
+    prefix: null,
+    directory: null,
+    projectSource: null,
+    platformUrl: null,
+    platformName: null,
+    projectType: null,
+    projectId: null,
+    blockchain: null,
+    currency: null,
+    currencySymbol: null,
+    currencyMod: null,
+    size: null,
+    jumpSize: 100,
+    type: 'Long-Form Generative Art',
+    releaseDate: null,
+    ratio: null,
+    description: null
+  }
+  // Now deconstruct the revdancattProjectJSON into newRevdancattProjectJSON,
+  // overwriting anything there already but not removing anything that isn't
+  // in the newRevdancattProjectJSON
+  Object.assign(newRevdancattProjectJSON, revdancattProjectJSON)
+
+  // Go grab the directory if we have it
+  if (project.projectDir) newRevdancattProjectJSON.directory = project.projectDir
+  // If we have a url link to the platform then use that
+  if (project.url) newRevdancattProjectJSON.platformUrl = project.url
+
+  // Now we need to grab data we know from the api and put it into the newRevdancattProjectJSON
+  if (project.api && project.api.data) {
+    newRevdancattProjectJSON.title = project.api.data.name
+    if (req.templateValues.platform.isFxhash) {
+      newRevdancattProjectJSON.projectSource = 'fxhash'
+      newRevdancattProjectJSON.platformName = 'fx(hash)'
+      newRevdancattProjectJSON.projectType = 'v1'
+      // TODO: Work out if the project has params
+      newRevdancattProjectJSON.projectId = project.projectId
+
+      // If there's a collection node then we want to grab the release date from the first item in the collection
+      if (project.api.collection) {
+        // Display the release date in MMM, YYYY format
+        const releaseDate = new Date(project.api.collection[0].createdAt)
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'Novermber', 'December']
+        newRevdancattProjectJSON.releaseDate = `${monthNames[releaseDate.getMonth()]}, ${releaseDate.getFullYear()}`
+      }
+    }
+  }
+  // Now grab some other things from the project object
+  if (project.blockchain) {
+    newRevdancattProjectJSON.blockchain = project.blockchain
+    if (project.blockchain === 'Ethereum') {
+      newRevdancattProjectJSON.currency = 'eth'
+      newRevdancattProjectJSON.currencySymbol = 'Ξ'
+      newRevdancattProjectJSON.currencyMod = 1000000000000000000
+    }
+    if (project.blockchain === 'Tezos') {
+      newRevdancattProjectJSON.currency = 'xtz'
+      newRevdancattProjectJSON.currencySymbol = 'ꜩ'
+      newRevdancattProjectJSON.currencyMod = 1000000
+    }
+    // TODO: Sort out Alba
+  }
+  // Set the size, we need a nicely formatted number with commas, based on the mint length
+  newRevdancattProjectJSON.size = `${project.mints.length.toLocaleString()} Unique Editions`
+
+  req.templateValues.newRevdancattProjectJSON = newRevdancattProjectJSON
+
+  // Now we want to check if we have highres images for the project
+  req.templateValues.hasHighres = false
+  req.templateValues.hasSlides = false
+  req.templateValues.hasThumbnails = false
 
   // Add the project to the template values
   req.templateValues.project = project

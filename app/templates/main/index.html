@@ -84,6 +84,26 @@
     </div>
   </section>
 
+  <section class="section has-background-white">
+    <div class="container">
+      <!-- We are going to add a form that allows us to add a new project -->
+      <form action="/" method="POST">
+        <div class="field">
+          <label class="label">Downloads root dir</label>
+          <div class="control">
+            <input class="input" type="text" placeholder="Root location of the downloads folder" name="downloadsFolder"
+              value="{{appData.downloadsRootDir}}">
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="control">
+            <button class="button is-primary" name="action" value="updateDownloadsFolder">Update</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
   {{> footer}}
 </body>
 

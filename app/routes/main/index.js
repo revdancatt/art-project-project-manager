@@ -42,6 +42,24 @@ exports.index = async (req, res) => {
       // Redirect to the home page
       return res.redirect('/')
     }
+    // Check to see if we have a downloads folder to update
+    if (req.body.action === 'updateDownloadsFolder' && req.body.downloadsFolder) {
+      let appDataJSON = {}
+      // set the data directory
+      const dataDir = path.join(__dirname, '../../../data')
+      // If it doesn't exist, create it
+      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir)
+      // set the appData file
+      const appDataFile = path.join(dataDir, 'appData.json')
+      // If it exists load the contents into appDataJSON
+      if (fs.existsSync(appDataFile)) appDataJSON = JSON.parse(fs.readFileSync(appDataFile, 'utf-8'))
+      // Set the redancattRootDir to the value we have been given
+      appDataJSON.downloadsRootDir = req.body.downloadsFolder
+      // Write the appDataJSON back to the file
+      fs.writeFileSync(appDataFile, JSON.stringify(appDataJSON, null, 2))
+      // Redirect to the home page
+      return res.redirect('/')
+    }
   }
 
   const dataDir = path.join(__dirname, '../../../data')

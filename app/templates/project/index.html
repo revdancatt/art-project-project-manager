@@ -93,6 +93,27 @@
           </div>
         </div>
 
+        <!-- Now we need to have a select which allows us to set which platform this project is on -->
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Blockchain</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <div class="select">
+                  <select name="blockchain">
+                    <option>Select blockchain</option>
+                    <option value="Ethereum" {{#ifEqual project.blockchain 'Ethereum' }}selected{{/ifEqual}}>Ethereum
+                    </option>
+                    <option value="Tezos" {{#ifEqual project.blockchain 'Tezos' }}selected{{/ifEqual}}>Tezos</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Enter the project ID here, this is the thing that will allow us to grab data from the API-->
         <div class="field is-horizontal">
           <div class="field-label is-normal">
@@ -129,10 +150,9 @@
             <div class="field-body">
               <div class="field">
                 {{#if project.api}}
-                  Last updated: {{timeAgo project.api.lastUpdated}}
-                  {{{dumpJSON project.api.data}}}
+                  ✅ Last updated: {{timeAgo project.api.lastUpdated}}
                 {{else}}
-                  No api fetched yet
+                  ❌
                 {{/if}}
               </div>
             </div>
@@ -173,7 +193,7 @@
 
           <div class="field is-horizontal">
             <div class="field-label">
-              <label class="label">index.html js snippet</label>
+              <label class="label">js snippet</label>
             </div>
             <div class="field-body">
               <div class="field">
@@ -200,6 +220,52 @@
               </div>
             </div>
           </div>
+
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <label class="label">Has forceWidth</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                {{#if project.hasForceWidth}}
+                  ✅
+                {{else}}
+                  ❌
+                {{/if}}
+              </div>
+            </div>
+          </div>
+
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <label class="label">Has forceDownload</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                {{#if project.hasForceDownload}}
+                  ✅
+                {{else}}
+                  ❌
+                {{/if}}
+              </div>
+            </div>
+          </div>
+
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <label class="label">Has forceId</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                {{#if project.hasForceId}}
+                  ✅
+                {{else}}
+                  ❌
+                {{/if}}
+              </div>
+            </div>
+          </div>
+
         {{/if}}
 
         <div class="field is-horizontal">
@@ -215,7 +281,6 @@
             </div>
           </div>
         </div>
-
 
         <div class="field is-horizontal">
           <div class="field-label is-normal">
@@ -235,8 +300,346 @@
     </div>
   </section>
 
+
+  <hr />
+  <section class="section has-background-white">
+    <div class="container">
+      <h1 class="title">Revdancatt info</h1>
+      <div class="columns">
+        <div class="column is-two-thirds">
+          <form action="/project/{{project.name}}" method="POST">
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">Title</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.title}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Prefix</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control is-expanded">
+                    <input class="input" type="text" name="prefix" value="{{newRevdancattProjectJSON.prefix}}">
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">directory</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.directory}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">projectSource</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.projectSource}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">platformUrl</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.platformUrl}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">platformName</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.platformName}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">projectType</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.projectType}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">projectId</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.projectId}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">blockchain</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.blockchain}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">currency</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.currency}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">currencySymbol</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.currencySymbol}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">currencyMod</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.currencyMod}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">size</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.size}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">jumpSize</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.jumpSize}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">type</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.type}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">releaseDate</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    {{newRevdancattProjectJSON.releaseDate}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Ratio</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control is-expanded">
+                    <input class="input" type="text" name="ratio" value="{{newRevdancattProjectJSON.ratio}}">
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">description</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control is-expanded">
+                    <textarea class="textarea" name="description" placeholder="Description goes here"
+                      rows="10">{{newRevdancattProjectJSON.description}}</textarea>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+              </div>
+              <div class="field-body">
+                <div class="field is-grouped">
+                  <p class="control">
+                    <button class="button is-primary" name="action" value="updateRevdancatt">Update</button>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+        <div class="column">
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {{#if project.mints.length}}
+    <hr />
+    <section class="section has-background-white">
+      <div class="container">
+        <h1 class="title">Image generator</h1>
+        <div class="columns">
+          <div class="column">
+            <h2 id="mintProgress" class="subtitle"></h2>
+            <!-- Add a button that starts the startMinting function -->
+            <button id="startMintingButton" class="button is-primary" onclick="startMinting()">Start minting</button>
+          </div>
+          <div class="column">
+            <iframe id="targetFrame" src="http://localhost:8888/" style="width: 100%; aspect-ratio: 1 / 1"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+  {{/if}}
+
+  {{#if canFetchApi}}
+    <hr />
+    <section class="section has-background-white">
+      <div class="container">
+        <h1 class="title">API output</h1>
+        {{{dumpJSON project.api.data}}}
+      </div>
+    </section>
+  {{/if}}
   {{> footer}}
 
+  {{#if project.mints.length}}
+    <script>
+      const mints = JSON.parse('{{{project.mintsJSON}}}')
+      let mintIndex = 0
+      const platform = '{{project.platform}}'
+      const startMinting = () => {
+        // Remove the start minting button
+        if (document.getElementById('startMintingButton')) document.getElementById('startMintingButton').remove()
+        // Build up the id we need to load
+        let url = null
+        if (platform === 'fxhash 1.0' || platform === 'fxhash 2.0') {
+          url = `http://localhost:8888/?fxhash=${mints[mintIndex].hash}&forceId=${mints[mintIndex].id}&forceWidth=8192&fxiteration=${mints[mintIndex].id}&forceDownload=true`
+        }
+        if (url) {
+          // Update the mintProgress text
+          document.getElementById('mintProgress').innerText = `Minting ${mintIndex + 1} of ${mints.length}`
+          // Set the iframe to load the url
+          document.getElementById('targetFrame').src = url
+        }
+      }
+      // This function gets called by the iframe when it's finished
+      const forceDownloaded = () => {
+        mintIndex++
+        // If we have more mints to do, do them
+        if (mintIndex < mints.length) {
+          startMinting()
+        } else {
+          document.getElementById('mintProgress').innerText = 'All done!'
+          // Reload the page in three seconds
+          setTimeout(() => {
+            window.location.reload()
+          }, 3000)
+        }
+      }
+
+      window.addEventListener("message", (event) => {
+        if (event.origin !== "http://localhost:8888")
+          return
+        if (event.data === 'forceDownloaded') {
+          forceDownloaded()
+        }
+      }, false)
+    </script>
+  {{/if}}
 </body>
 
 </html>
