@@ -131,3 +131,4 @@ dist
 /package-lock.json
 /data
 /app/public/collages
+/app/public/slides

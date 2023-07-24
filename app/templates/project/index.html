@@ -306,7 +306,7 @@
     <div class="container">
       <h1 class="title">Revdancatt info</h1>
       <div class="columns">
-        <div class="column is-two-thirds">
+        <div class="column is-half">
           <form action="/project/{{project.name}}" method="POST">
 
             <div class="field is-horizontal">
@@ -337,7 +337,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">directory</label>
+                <label class="label">Directory</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -350,7 +350,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">projectSource</label>
+                <label class="label">Source</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -363,7 +363,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">platformUrl</label>
+                <label class="label">Url</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -376,7 +376,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">platformName</label>
+                <label class="label">Name</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -389,7 +389,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">projectType</label>
+                <label class="label">Type</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -402,7 +402,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">projectId</label>
+                <label class="label">Id</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -415,7 +415,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">blockchain</label>
+                <label class="label">Blockchain</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -428,7 +428,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">currency</label>
+                <label class="label">Currency</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -441,7 +441,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">currencySymbol</label>
+                <label class="label">Symbol</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -454,7 +454,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">currencyMod</label>
+                <label class="label">Mod</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -467,7 +467,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">size</label>
+                <label class="label">Size</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -480,7 +480,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">jumpSize</label>
+                <label class="label">Jump Size</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -493,7 +493,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">type</label>
+                <label class="label">Gen type</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -506,7 +506,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">releaseDate</label>
+                <label class="label">Release</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -533,7 +533,7 @@
 
             <div class="field is-horizontal">
               <div class="field-label is-normal">
-                <label class="label">description</label>
+                <label class="label">Description</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -559,8 +559,180 @@
 
           </form>
         </div>
-        <div class="column">
+        <div class="column is-half">
+          <form action="/project/{{project.name}}" method="POST">
 
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">Mints JSON</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-grouped">
+                  <p class="control">
+                    {{#if hasMintsData}}
+                      ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateMintJSON">Update</button>
+
+                    {{else}}
+                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateMintJSON">Create</button>
+                    {{/if}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">Highres</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-grouped">
+                  <p class="control">
+                    {{#if hasHighres}}
+                      ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateHighres">Update</button>
+
+                    {{else}}
+                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateHighres">Create</button>
+                    {{/if}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">Thumbnails</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-grouped">
+                  <p class="control">
+                    {{#if hasThumbnails}}
+                      ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateThumbnails">Update</button>
+
+                    {{else}}
+                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateThumbnails">Create</button>
+                    {{/if}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">Slides</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-grouped">
+                  <p class="control">
+                    {{#if hasSlides}}
+                      ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateSlides">Update</button>
+
+                    {{else}}
+                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateSlides">Create</button>
+                    {{/if}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">Downloads clear</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-grouped">
+                  <p class="control">
+                    {{#if hasImagesInDownloadsFolder}}
+                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="cleanDownloads">Cleanup</button>
+                    {{else}}
+                      ✅
+                    {{/if}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+
+            {{#if hasSlides}}
+
+              <div class="columns">
+                <div class="column is-one-third">
+                  <div class="card">
+                    <div class="card-image">
+                      <figure class="image block checkerboard">
+                        <a href="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[0]}}" target="_blank">
+                          <img class="is-fullwidth" src="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[0]}}">
+                        </a>
+                      </figure>
+                    </div>
+                  </div>
+                  <br />
+                  <div class="card">
+                    <div class="card-image">
+                      <figure class="image block checkerboard">
+                        <a href="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[3]}}" target="_blank">
+                          <img class="is-fullwidth" src="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[3]}}">
+                        </a>
+                      </figure>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="column is-one-third">
+                  <div class="card">
+                    <div class="card-image">
+                      <figure class="image block checkerboard">
+                        <a href="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[1]}}" target="_blank">
+                          <img class="is-fullwidth" src="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[1]}}">
+                        </a>
+                      </figure>
+                    </div>
+                  </div>
+                  <br />
+                  <div class="card">
+                    <div class="card-image">
+                      <figure class="image block checkerboard">
+                        <a href="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[4]}}" target="_blank">
+                          <img class="is-fullwidth" src="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[4]}}">
+                        </a>
+                      </figure>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="column is-one-third">
+                  <div class="card">
+                    <div class="card-image">
+                      <figure class="image block checkerboard">
+                        <a href="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[2]}}" target="_blank">
+                          <img class="is-fullwidth" src="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[2]}}">
+                        </a>
+                      </figure>
+                    </div>
+                  </div>
+                  <br />
+                  <div class="card">
+                    <div class="card-image">
+                      <figure class="image block checkerboard">
+                        <a href="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[5]}}" target="_blank">
+                          <img class="is-fullwidth" src="/slides/{{newRevdancattProjectJSON.prefix}}/{{slides.[5]}}">
+                        </a>
+                      </figure>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {{/if}}
+
+          </form>
         </div>
       </div>
     </div>

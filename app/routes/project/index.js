@@ -343,12 +343,282 @@ exports.index = async (req, res) => {
   // Set the size, we need a nicely formatted number with commas, based on the mint length
   newRevdancattProjectJSON.size = `${project.mints.length.toLocaleString()} Unique Editions`
 
+  if (req.method === 'POST' && req.body.action && req.body.action === 'updateRevdancatt') {
+    newRevdancattProjectJSON.prefix = req.body.prefix
+    newRevdancattProjectJSON.ratio = req.body.ratio
+    newRevdancattProjectJSON.description = req.body.description
+    //   If we have a projects.json file in revdancatt then we need to load it in
+    if (appData.revdancattRootDir) {
+      const revdancattProjectFile = path.join(appData.revdancattRootDir, 'data', 'projects.json')
+      let revdancattProjects = []
+      // If the file exists then load it in
+      if (fs.existsSync(revdancattProjectFile)) {
+        // Load the contents of the projects file
+        revdancattProjects = JSON.parse(fs.readFileSync(revdancattProjectFile, 'utf-8'))
+        // Loop through the projects
+        // TODO: Grab the project
+        let foundMatch = null
+        let projectIndex = 0
+        for (const revdancattProject of revdancattProjects) {
+          console.log(revdancattProject.directory, newRevdancattProjectJSON.directory)
+          if (revdancattProject.directory === newRevdancattProjectJSON.directory) {
+            foundMatch = projectIndex
+          }
+          projectIndex++
+        }
+        console.log('foundMatch: ', foundMatch)
+        // If we didn't find a match, then we need to add the new project to the projects array
+        if (!foundMatch) {
+          revdancattProjects.push(newRevdancattProjectJSON)
+        } else {
+          // Otherwise we want to update the project in the projects array
+          revdancattProjects[foundMatch] = newRevdancattProjectJSON
+        }
+      } else {
+        // Otherwise we push it into the projects array
+        revdancattProjects.push(newRevdancattProjectJSON)
+      }
+      // Now write the projects file back to disk
+      fs.writeFileSync(revdancattProjectFile, JSON.stringify(revdancattProjects, null, 2), 'utf-8')
+    }
+    return res.redirect(`/project/${req.params.projectName}`)
+  }
   req.templateValues.newRevdancattProjectJSON = newRevdancattProjectJSON
 
+  // Check to see if we have mints file for the project
+  req.templateValues.hasMintsData = false
+  // If we are an fxhash project then we need to check in the fxhash directory
+  if (project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0') {
+    const mintsDirectory = path.join(appData.revdancattRootDir, 'data', 'fxhash')
+    const mintsJSONFile = path.join(mintsDirectory, `${project.projectId}.json`)
+    if (fs.existsSync(mintsJSONFile)) req.templateValues.hasMintsData = true
+  }
+
   // Now we want to check if we have highres images for the project
-  req.templateValues.hasHighres = false
-  req.templateValues.hasSlides = false
-  req.templateValues.hasThumbnails = false
+  req.templateValues.hasHighres = true
+  req.templateValues.hasSlides = true
+  req.templateValues.hasThumbnails = true
+
+  // Check to see if we have any images in the downloads folder
+  req.templateValues.hasImagesInDownloadsFolder = true
+
+  // Grab the contents of the highres folder for the project from the revdancatt site
+  let highresFiles = []
+  const highresDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'highres')
+  if (fs.existsSync(highresDir)) highresFiles = fs.readdirSync(highresDir).filter(file => file.indexOf('.jpg') !== -1)
+  // Do the same again for the thumbnails
+  let thumbnailsFiles = []
+  const thumbnailsDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'thumbnails')
+  if (fs.existsSync(thumbnailsDir)) thumbnailsFiles = fs.readdirSync(thumbnailsDir).filter(file => file.indexOf('.jpg') !== -1)
+  // And again for the downloads folder, but we use .png this time, and grab the downloads folder from the appData
+  let downloadsFiles = []
+  const downloadsDir = path.join(appData.downloadsRootDir)
+  if (fs.existsSync(downloadsDir)) downloadsFiles = fs.readdirSync(downloadsDir).filter(file => file.indexOf('.png') !== -1)
+  // Finally we are going to see if there are _ANY_ files in the slides folder
+  let slidesFiles = []
+  const slidesDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'slides')
+  if (fs.existsSync(slidesDir)) slidesFiles = fs.readdirSync(slidesDir).filter(file => file.indexOf('.jpg') !== -1)
+  if (slidesFiles.length === 0) req.templateValues.hasSlides = false
+  req.templateValues.slides = slidesFiles
+
+  // Do a loop over the total number of mints
+  const imageFilenames = []
+  for (let i = 0; i < project.mints.length; i++) {
+    const thisIndex = i + indexOffset
+    let thisFilename = `${newRevdancattProjectJSON.prefix}_${thisIndex.toString().padStart(4, '0')}_`
+    // If we are on fxhash, then we need to look in the api collections node to grab the generated hash
+    if (project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0') {
+      // If we have an api node in the project object then we want to use that
+      if (project.api && project.api.collection) {
+        // Grab the hash from the collections based on i
+        const thisHash = project.api.collection[i].generationHash
+        // Add it to the filename
+        thisFilename += thisHash
+        // See if this filename exists in the highresFiles array, if not then set the hasHighres flag to false
+        if (highresFiles.indexOf(`${thisFilename}.jpg`) === -1) req.templateValues.hasHighres = false
+        // See if this filename exists in the thumbnailsFiles array, if not then set the hasThumbnails flag to false
+        if (thumbnailsFiles.indexOf(`${thisFilename}.jpg`) === -1) req.templateValues.hasThumbnails = false
+        // See if this filename exists in the downloadsFiles array, if not then set the hasImagesInDownloadsFolder flag to false
+        if (downloadsFiles.indexOf(`${thisFilename}.png`) === -1) req.templateValues.hasImagesInDownloadsFolder = false
+      }
+      imageFilenames.push(thisFilename)
+    }
+  }
+
+  // Now we need to check to see if we've been told to create the mints JSON or images
+  if (req.method === 'POST' && req.body.JSONandImageActions) {
+    // Grab the size of the first image in the downloads folder
+    const {
+      createCanvas,
+      loadImage
+    } = require('canvas')
+    const sizeOf = require('image-size')
+    const firstImage = path.join(downloadsDir, `${imageFilenames[0]}.png`)
+    const dimensions = sizeOf(firstImage)
+
+    if (req.body.JSONandImageActions === 'updateHighres') {
+      // We need to go through each of the downloads file and convert them into highres jpg files, do the each loop first
+      for (const sourceImage of imageFilenames) {
+        const sourceFilename = `${sourceImage}.png`
+        const sourceFile = path.join(downloadsDir, sourceFilename)
+        const targetFilename = `${sourceImage}.jpg`
+        const targetFile = path.join(highresDir, targetFilename)
+        // Only do this if the sourceFile exists
+        if (fs.existsSync(sourceFile)) {
+          console.log(sourceFile)
+          // Create a new canvas based on the width and height
+          const canvas = createCanvas(dimensions.width, dimensions.height)
+          const ctx = canvas.getContext('2d')
+          const image = await loadImage(sourceFile)
+          ctx.drawImage(image, 0, 0)
+          const out = fs.createWriteStream(targetFile)
+          // Create a stream to write the jpg to
+          const stream = canvas.createJPEGStream()
+          // Stream it out but in a way where we can use await
+          await new Promise((resolve, reject) => {
+            stream.pipe(out)
+            out.on('finish', resolve)
+            out.on('error', reject)
+          })
+        }
+      }
+    }
+
+    if (req.body.JSONandImageActions === 'updateThumbnails') {
+      let targetWidth = 1280
+      let targetHeight = targetWidth / dimensions.width * dimensions.height
+      // If the targetWidth is greater than the dimensions.width then we need to flip it
+      if (targetWidth > dimensions.width) {
+        targetHeight = 1280
+        targetWidth = targetHeight / dimensions.height * dimensions.width
+      }
+      // We need to go through each of the downloads file and convert them into highres jpg files, do the each loop first
+      for (const sourceImage of imageFilenames) {
+        const sourceFilename = `${sourceImage}.png`
+        const sourceFile = path.join(downloadsDir, sourceFilename)
+        const targetFilename = `${sourceImage}.jpg`
+        const targetFile = path.join(thumbnailsDir, targetFilename)
+        // Only do this if the sourceFile exists
+        if (fs.existsSync(sourceFile)) {
+          console.log(sourceFile)
+          // Create a new canvas based on the width and height
+          const canvas = createCanvas(targetWidth, targetHeight)
+          const ctx = canvas.getContext('2d')
+          const image = await loadImage(sourceFile)
+          ctx.drawImage(image, 0, 0, targetWidth, targetHeight)
+          const out = fs.createWriteStream(targetFile)
+          // Create a stream to write the jpg to
+          const stream = canvas.createJPEGStream()
+          // Stream it out but in a way where we can use await
+          await new Promise((resolve, reject) => {
+            stream.pipe(out)
+            out.on('finish', resolve)
+            out.on('error', reject)
+          })
+        }
+      }
+    }
+
+    if (req.body.JSONandImageActions === 'updateSlides') {
+      const minSlideWidth = 1600
+      const minSlideHeight = 2250
+      const slideRatio = minSlideWidth / minSlideHeight
+      // Delete the contents of the slides directory
+      fs.readdirSync(slidesDir).forEach(file => {
+        const filePath = path.join(slidesDir, file)
+        fs.unlinkSync(filePath)
+      })
+      // Also make a slides folder in our own plublic folder so we can show them
+      const localSlidesFolder = path.join(__dirname, '../../public/slides')
+      // If it doesn't exist then create it
+      if (!fs.existsSync(localSlidesFolder)) fs.mkdirSync(localSlidesFolder)
+      // Now the local slides project folder for this project based on the prefix
+      const localSlidesProjectFolder = path.join(localSlidesFolder, newRevdancattProjectJSON.prefix)
+      // If it doesn't exist then create it
+      if (!fs.existsSync(localSlidesProjectFolder)) fs.mkdirSync(localSlidesProjectFolder)
+      // Now delete all the files in the localSlidesProjectFolder
+      fs.readdirSync(localSlidesProjectFolder).forEach(file => {
+        const filePath = path.join(localSlidesProjectFolder, file)
+        fs.unlinkSync(filePath)
+      })
+
+      // Make a deep copy of the filenames array
+      const imageFilenamesCopy = JSON.parse(JSON.stringify(imageFilenames))
+      // Now shuffle it, properly, here without using a function
+      for (let i = imageFilenamesCopy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        const temp = imageFilenamesCopy[i]
+        imageFilenamesCopy[i] = imageFilenamesCopy[j]
+        imageFilenamesCopy[j] = temp
+      }
+
+      // Now we are going to make five new slides
+      for (let i = 0; i < 6; i++) {
+        const sourceFilename = `${imageFilenamesCopy[i]}.png`
+        const sourceFile = path.join(downloadsDir, sourceFilename)
+        const targetFilename = `${imageFilenamesCopy[i]}.jpg`
+        const targetFile = path.join(slidesDir, targetFilename)
+
+        // Work out if the width of the original image times by the slideRatio is greater than the height
+        let sourceHeight = null
+        let sourceWidth = null
+        if (dimensions.width / slideRatio > dimensions.height) {
+          // We need to do the calculation based on the height
+          // Pick a random height between 2250 and the height of the original image
+          sourceHeight = Math.floor(Math.random() * (dimensions.height - minSlideHeight + 1) + minSlideHeight)
+          // Work out the width based on the sourceHeight and the slideRatio
+          sourceWidth = Math.floor(sourceHeight * slideRatio)
+        } else {
+          // We can do the calculations based on the width
+          // Pick a random width between 1600 and the width of the original image
+          sourceWidth = Math.floor(Math.random() * (dimensions.width - minSlideWidth + 1) + minSlideWidth)
+          // Work out the height based on the sourceWidth and the slideRatio
+          sourceHeight = Math.floor(sourceWidth / slideRatio)
+        }
+        // Work out where we are going to _take_ from the original image, this is going to be a random x and y
+        // based in the original width and height less the source width and height
+        const sourceX = Math.floor(Math.random() * (dimensions.width - sourceWidth + 1))
+        const sourceY = Math.floor(Math.random() * (dimensions.height - sourceHeight + 1))
+
+        if (fs.existsSync(sourceFile)) {
+          console.log(sourceFile)
+          const canvas = createCanvas(minSlideWidth, minSlideHeight)
+          const ctx = canvas.getContext('2d')
+          const image = await loadImage(sourceFile)
+          // Draw the image from the sourceX and sourceY, sourceWidth and sourceHeight into the canvas
+          ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, minSlideWidth, minSlideHeight)
+          const out = fs.createWriteStream(targetFile)
+          // Create a stream to write the jpg to
+          const stream = canvas.createJPEGStream()
+          // Stream it out but in a way where we can use await
+          await new Promise((resolve, reject) => {
+            stream.pipe(out)
+            out.on('finish', resolve)
+            out.on('error', reject)
+          })
+          // Now copy the file to the localSlidesProjectFolder
+          const localSlidesProjectFile = path.join(localSlidesProjectFolder, targetFilename)
+          fs.copyFileSync(targetFile, localSlidesProjectFile)
+        }
+      }
+    }
+
+    if (req.body.JSONandImageActions === 'cleanDownloads') {
+      // Go through all the filenames and delete them from the downloads folder
+      for (const sourceImage of imageFilenames) {
+        const sourceFilename = `${sourceImage}.png`
+        const sourceFile = path.join(downloadsDir, sourceFilename)
+        // Only do this if the sourceFile exists
+        if (fs.existsSync(sourceFile)) {
+          // unlink the file
+          fs.unlinkSync(sourceFile)
+        }
+      }
+    }
+
+    // return a reload to the project page
+    return res.redirect(`/project/${req.params.projectName}`)
+  }
 
   // Add the project to the template values
   req.templateValues.project = project
@@ -469,7 +739,6 @@ exports.collage = async (req, res) => {
   // but do it as a each loop so we can await the image loading
   // Make an array of the number of samples we want to make, numbered 0 to samples
   const sampleArray = [...Array(samples).keys()]
-  console.log('sampleArray', sampleArray)
   for (const c of sampleArray) {
   // for (let c = 0; c < samples; c++) {
     // Do a proper inline shuffle of the thumbnails, without using a function
@@ -588,7 +857,6 @@ exports.collage = async (req, res) => {
       }
       // Extract the id from the filename
       const id = parseInt(thumbnails[thumbnailPointer].split('_')[1])
-      console.log(id)
       // Write the id to the canvas
       ctx.fillStyle = 'rgba(0, 0, 0, 1)'
       ctx.textAlign = 'right'
