@@ -388,9 +388,11 @@ exports.index = async (req, res) => {
   // Check to see if we have mints file for the project
   req.templateValues.hasMintsData = false
   // If we are an fxhash project then we need to check in the fxhash directory
+  let mintsDirectory = null
+  let mintsJSONFile = null
   if (project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0') {
-    const mintsDirectory = path.join(appData.revdancattRootDir, 'data', 'fxhash')
-    const mintsJSONFile = path.join(mintsDirectory, `${project.projectId}.json`)
+    mintsDirectory = path.join(appData.revdancattRootDir, 'data', 'projects', 'fxhash')
+    mintsJSONFile = path.join(mintsDirectory, `${project.projectId}.json`)
     if (fs.existsSync(mintsJSONFile)) req.templateValues.hasMintsData = true
   }
 
@@ -454,7 +456,24 @@ exports.index = async (req, res) => {
     } = require('canvas')
     const sizeOf = require('image-size')
     const firstImage = path.join(downloadsDir, `${imageFilenames[0]}.png`)
-    const dimensions = sizeOf(firstImage)
+    let dimensions = null
+    if (fs.existsSync(firstImage)) {
+      req.templateValues.hasImagesInDownloadsFolder = true
+      dimensions = sizeOf(firstImage)
+    }
+
+    if (req.body.JSONandImageActions === 'updateMintJSON') {
+      // We need to grab the JSON file for the project that holds all the mints, and then split it up into
+      // a separate JSON file for each mint
+      // First grab all the mints, this is different depending on the platform
+      let mints = []
+      if (project.platform === 'fxhash 1.0' || project.platform === 'fxhash 2.0') {
+        mints = project.api.collection
+        // Now we need to save those mints into the fxhash directory in the data
+        // folder over in revdancatt.com
+        fs.writeFileSync(mintsJSONFile, JSON.stringify(mints, null, 2))
+      }
+    }
 
     if (req.body.JSONandImageActions === 'updateHighres') {
       // We need to go through each of the downloads file and convert them into highres jpg files, do the each loop first

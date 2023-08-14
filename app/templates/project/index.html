@@ -589,13 +589,22 @@
               <div class="field-body">
                 <div class="field is-grouped">
                   <p class="control">
-                    {{#if hasHighres}}
-                      ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
-                        value="updateHighres">Update</button>
+                    {{#if hasImagesInDownloadsFolder}}
+                      {{#if hasHighres}}
+                        ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                          value="updateHighres">Update</button>
 
+                      {{else}}
+                        ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                          value="updateHighres">Create</button>
+                      {{/if}}
                     {{else}}
-                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
-                        value="updateHighres">Create</button>
+                      {{#if hasHighres}}
+                        ✅ &nbsp;
+                      {{else}}
+                        ❌ &nbsp;
+                      {{/if}}
+                      <small>(No images in downloads folder)</small>
                     {{/if}}
                   </p>
                 </div>
@@ -609,13 +618,22 @@
               <div class="field-body">
                 <div class="field is-grouped">
                   <p class="control">
-                    {{#if hasThumbnails}}
-                      ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
-                        value="updateThumbnails">Update</button>
+                    {{#if hasImagesInDownloadsFolder}}
+                      {{#if hasThumbnails}}
+                        ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                          value="updateThumbnails">Update</button>
 
+                      {{else}}
+                        ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                          value="updateThumbnails">Create</button>
+                      {{/if}}
                     {{else}}
-                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
-                        value="updateThumbnails">Create</button>
+                      {{#if hasHighres}}
+                        ✅ &nbsp;
+                      {{else}}
+                        ❌ &nbsp;
+                      {{/if}}
+                      <small>(No images in downloads folder)</small>
                     {{/if}}
                   </p>
                 </div>
@@ -629,13 +647,22 @@
               <div class="field-body">
                 <div class="field is-grouped">
                   <p class="control">
-                    {{#if hasSlides}}
-                      ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
-                        value="updateSlides">Update</button>
+                    {{#if hasImagesInDownloadsFolder}}
+                      {{#if hasSlides}}
+                        ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                          value="updateSlides">Update</button>
 
+                      {{else}}
+                        ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                          value="updateSlides">Create</button>
+                      {{/if}}
                     {{else}}
-                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
-                        value="updateSlides">Create</button>
+                      {{#if hasHighres}}
+                        ✅ &nbsp;
+                      {{else}}
+                        ❌ &nbsp;
+                      {{/if}}
+                      <small>(No images in downloads folder)</small>
                     {{/if}}
                   </p>
                 </div>
