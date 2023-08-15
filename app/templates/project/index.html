@@ -330,6 +330,7 @@
                 <div class="field">
                   <p class="control is-expanded">
                     <input class="input" type="text" name="prefix" value="{{newRevdancattProjectJSON.prefix}}">
+                    <small>The image prefix, i.e. <code>prefix_0001_hash.jpg</code> </small>
                   </p>
                 </div>
               </div>
@@ -564,26 +565,6 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
-                <label class="label">Mints JSON</label>
-              </div>
-              <div class="field-body">
-                <div class="field is-grouped">
-                  <p class="control">
-                    {{#if hasMintsData}}
-                      ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
-                        value="updateMintJSON">Update</button>
-
-                    {{else}}
-                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
-                        value="updateMintJSON">Create</button>
-                    {{/if}}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="field is-horizontal">
-              <div class="field-label">
                 <label class="label">Highres</label>
               </div>
               <div class="field-body">
@@ -671,6 +652,26 @@
 
             <div class="field is-horizontal">
               <div class="field-label">
+                <label class="label">Mints JSON</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-grouped">
+                  <p class="control">
+                    {{#if hasMintsData}}
+                      ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateMintJSON">Update</button>
+
+                    {{else}}
+                      ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
+                        value="updateMintJSON">Create</button>
+                    {{/if}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
                 <label class="label">Downloads clear</label>
               </div>
               <div class="field-body">
@@ -688,8 +689,19 @@
             </div>
 
 
+            <hr />
+            <div class="container mb-5">
+              <h1 class="title is-4">Slides</h1>
+              <p>
+                {{#if hasSlides}}
+                  This is a preview of the slides generated and placed in the <code>/slides</code> folder over on
+                  revdancatt.com
+                {{else}}
+                  No slides have been generated yet, create all the images using the Image Generator below.
+                {{/if}}
+              </p>
+            </div>
             {{#if hasSlides}}
-
               <div class="columns">
                 <div class="column is-one-third">
                   <div class="card">
@@ -772,9 +784,13 @@
         <h1 class="title">Image generator</h1>
         <div class="columns">
           <div class="column">
-            <h2 id="mintProgress" class="subtitle"></h2>
+            <p class="mb-5">
+              Make sure the correct project is running on <a href="http://localhost:8888/"
+                target="_blank">localhost:8888</a>
+            </p>
             <!-- Add a button that starts the startMinting function -->
             <button id="startMintingButton" class="button is-primary" onclick="startMinting()">Start minting</button>
+            <div id="mintProgress"></div>
           </div>
           <div class="column">
             <iframe id="targetFrame" src="http://localhost:8888/" style="width: 100%; aspect-ratio: 1 / 1"></iframe>
@@ -806,7 +822,8 @@
         // Build up the id we need to load
         let url = null
         if (platform === 'fxhash 1.0' || platform === 'fxhash 2.0') {
-          url = `http://localhost:8888/?fxhash=${mints[mintIndex].hash}&forceId=${mints[mintIndex].id}&forceWidth=8192&fxiteration=${mints[mintIndex].id}&forceDownload=true`
+          url = `http://localhost:8888/?fxhash=${mints[mintIndex].hash}&forceId=${mints[mintIndex].id}&forceWidth=8192&fxiteration=${mints[mintIndex].id}&forceDownload=true#0x${mints[mintIndex].inputBytes}`
+          console.log(url)
         }
         if (url) {
           // Update the mintProgress text

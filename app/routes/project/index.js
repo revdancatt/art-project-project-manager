@@ -102,6 +102,7 @@ exports.index = async (req, res) => {
                 name
               }
               features
+              inputBytes
             }
           }
         }`
@@ -236,7 +237,8 @@ exports.index = async (req, res) => {
       for (let i = 0; i < project.api.collection.length; i++) {
         mints.push({
           id: i + indexOffset,
-          hash: project.api.collection[i].generationHash
+          hash: project.api.collection[i].generationHash,
+          inputBytes: project.api.collection[i].inputBytes
         })
       }
     }
@@ -360,13 +362,11 @@ exports.index = async (req, res) => {
         let foundMatch = null
         let projectIndex = 0
         for (const revdancattProject of revdancattProjects) {
-          console.log(revdancattProject.directory, newRevdancattProjectJSON.directory)
           if (revdancattProject.directory === newRevdancattProjectJSON.directory) {
             foundMatch = projectIndex
           }
           projectIndex++
         }
-        console.log('foundMatch: ', foundMatch)
         // If we didn't find a match, then we need to add the new project to the projects array
         if (!foundMatch) {
           revdancattProjects.push(newRevdancattProjectJSON)
@@ -397,31 +397,46 @@ exports.index = async (req, res) => {
   }
 
   // Now we want to check if we have highres images for the project
-  req.templateValues.hasHighres = true
-  req.templateValues.hasSlides = true
-  req.templateValues.hasThumbnails = true
 
   // Check to see if we have any images in the downloads folder
   req.templateValues.hasImagesInDownloadsFolder = true
 
-  // Grab the contents of the highres folder for the project from the revdancatt site
+  // These will hold the images
   let highresFiles = []
-  const highresDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'highres')
-  if (fs.existsSync(highresDir)) highresFiles = fs.readdirSync(highresDir).filter(file => file.indexOf('.jpg') !== -1)
-  // Do the same again for the thumbnails
   let thumbnailsFiles = []
-  const thumbnailsDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'thumbnails')
-  if (fs.existsSync(thumbnailsDir)) thumbnailsFiles = fs.readdirSync(thumbnailsDir).filter(file => file.indexOf('.jpg') !== -1)
-  // And again for the downloads folder, but we use .png this time, and grab the downloads folder from the appData
+  let slidesFiles = []
   let downloadsFiles = []
+
+  let highresDir = null
+  let thumbnailsDir = null
+  let slidesDir = null
+
+  req.templateValues.hasHighres = true
+  req.templateValues.hasSlides = true
+  req.templateValues.hasThumbnails = true
+
+  if (project.projectDir) {
+    // Grab the contents of the highres folder for the project from the revdancatt site
+    highresDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'highres')
+    if (fs.existsSync(highresDir)) highresFiles = fs.readdirSync(highresDir).filter(file => file.indexOf('.jpg') !== -1)
+    // Do the same again for the thumbnails
+    thumbnailsDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'thumbnails')
+    if (fs.existsSync(thumbnailsDir)) thumbnailsFiles = fs.readdirSync(thumbnailsDir).filter(file => file.indexOf('.jpg') !== -1)
+
+    // And again for to see if there are _ANY_ files in the slides folder
+    slidesDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'slides')
+    if (fs.existsSync(slidesDir)) slidesFiles = fs.readdirSync(slidesDir).filter(file => file.indexOf('.jpg') !== -1)
+    if (slidesFiles.length === 0) req.templateValues.hasSlides = false
+    req.templateValues.slides = slidesFiles
+  } else {
+    req.templateValues.hasHighres = false
+    req.templateValues.hasSlides = false
+    req.templateValues.hasThumbnails = false
+  }
+
+  // Finally for the downloads folder, but we use .png this time, and grab the downloads folder from the appData
   const downloadsDir = path.join(appData.downloadsRootDir)
   if (fs.existsSync(downloadsDir)) downloadsFiles = fs.readdirSync(downloadsDir).filter(file => file.indexOf('.png') !== -1)
-  // Finally we are going to see if there are _ANY_ files in the slides folder
-  let slidesFiles = []
-  const slidesDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'slides')
-  if (fs.existsSync(slidesDir)) slidesFiles = fs.readdirSync(slidesDir).filter(file => file.indexOf('.jpg') !== -1)
-  if (slidesFiles.length === 0) req.templateValues.hasSlides = false
-  req.templateValues.slides = slidesFiles
 
   // Do a loop over the total number of mints
   const imageFilenames = []
