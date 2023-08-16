@@ -306,7 +306,9 @@ exports.index = async (req, res) => {
   // Go grab the directory if we have it
   if (project.projectDir) newRevdancattProjectJSON.directory = project.projectDir
   // If we have a url link to the platform then use that
-  if (project.url) newRevdancattProjectJSON.platformUrl = project.url
+  // TODO, fix this!
+  // THE PLATFORM URL IS NOT THE PROJECT URL!!!
+  if (project.url) newRevdancattProjectJSON.platformUrl = project.url.replace(project.projectId, '')
 
   // Now we need to grab data we know from the api and put it into the newRevdancattProjectJSON
   if (project.api && project.api.data) {
@@ -418,6 +420,7 @@ exports.index = async (req, res) => {
   if (project.projectDir) {
     // Grab the contents of the highres folder for the project from the revdancatt site
     highresDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'highres')
+    console.log('Looking in: ', highresDir)
     if (fs.existsSync(highresDir)) highresFiles = fs.readdirSync(highresDir).filter(file => file.indexOf('.jpg') !== -1)
     // Do the same again for the thumbnails
     thumbnailsDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'thumbnails')
@@ -451,6 +454,7 @@ exports.index = async (req, res) => {
         const thisHash = project.api.collection[i].generationHash
         // Add it to the filename
         thisFilename += thisHash
+        // console.log(thisFilename + '.jpg || ' + highresFiles.indexOf(`${thisFilename}.jpg`))
         // See if this filename exists in the highresFiles array, if not then set the hasHighres flag to false
         if (highresFiles.indexOf(`${thisFilename}.jpg`) === -1) req.templateValues.hasHighres = false
         // See if this filename exists in the thumbnailsFiles array, if not then set the hasThumbnails flag to false
@@ -491,6 +495,7 @@ exports.index = async (req, res) => {
     }
 
     if (req.body.JSONandImageActions === 'updateHighres') {
+      let theseDimensions = null
       // We need to go through each of the downloads file and convert them into highres jpg files, do the each loop first
       for (const sourceImage of imageFilenames) {
         const sourceFilename = `${sourceImage}.png`
@@ -500,8 +505,9 @@ exports.index = async (req, res) => {
         // Only do this if the sourceFile exists
         if (fs.existsSync(sourceFile)) {
           console.log(sourceFile)
+          if (!theseDimensions) theseDimensions = sizeOf(sourceFile)
           // Create a new canvas based on the width and height
-          const canvas = createCanvas(dimensions.width, dimensions.height)
+          const canvas = createCanvas(theseDimensions.width, theseDimensions.height)
           const ctx = canvas.getContext('2d')
           const image = await loadImage(sourceFile)
           ctx.drawImage(image, 0, 0)
@@ -519,14 +525,8 @@ exports.index = async (req, res) => {
     }
 
     if (req.body.JSONandImageActions === 'updateThumbnails') {
-      let targetWidth = 1280
-      let targetHeight = targetWidth / dimensions.width * dimensions.height
-      // If the targetWidth is greater than the dimensions.width then we need to flip it
-      if (targetWidth > dimensions.width) {
-        targetHeight = 1280
-        targetWidth = targetHeight / dimensions.height * dimensions.width
-      }
       // We need to go through each of the downloads file and convert them into highres jpg files, do the each loop first
+      let theseDimensions = null
       for (const sourceImage of imageFilenames) {
         const sourceFilename = `${sourceImage}.png`
         const sourceFile = path.join(downloadsDir, sourceFilename)
@@ -535,6 +535,14 @@ exports.index = async (req, res) => {
         // Only do this if the sourceFile exists
         if (fs.existsSync(sourceFile)) {
           console.log(sourceFile)
+          if (!theseDimensions) theseDimensions = sizeOf(sourceFile)
+          let targetWidth = 1280
+          let targetHeight = targetWidth / theseDimensions.width * theseDimensions.height
+          // If the targetWidth is greater than the dimensions.width then we need to flip it
+          if (targetWidth > theseDimensions.width) {
+            targetHeight = 1280
+            targetWidth = targetHeight / theseDimensions.height * theseDimensions.width
+          }
           // Create a new canvas based on the width and height
           const canvas = createCanvas(targetWidth, targetHeight)
           const ctx = canvas.getContext('2d')
@@ -588,31 +596,32 @@ exports.index = async (req, res) => {
 
       // Now we are going to make five new slides
       for (let i = 0; i < 6; i++) {
-        const sourceFilename = `${imageFilenamesCopy[i]}.png`
-        const sourceFile = path.join(downloadsDir, sourceFilename)
+        const sourceFilename = `${imageFilenamesCopy[i]}.jpg`
+        const sourceFile = path.join(highresDir, sourceFilename)
         const targetFilename = `${imageFilenamesCopy[i]}.jpg`
         const targetFile = path.join(slidesDir, targetFilename)
 
+        const sourceDimensions = sizeOf(sourceFile)
         // Work out if the width of the original image times by the slideRatio is greater than the height
         let sourceHeight = null
         let sourceWidth = null
-        if (dimensions.width / slideRatio > dimensions.height) {
+        if (sourceDimensions.width / slideRatio > sourceDimensions.height) {
           // We need to do the calculation based on the height
           // Pick a random height between 2250 and the height of the original image
-          sourceHeight = Math.floor(Math.random() * (dimensions.height - minSlideHeight + 1) + minSlideHeight)
+          sourceHeight = Math.floor(Math.random() * (sourceDimensions.height - minSlideHeight + 1) + minSlideHeight)
           // Work out the width based on the sourceHeight and the slideRatio
           sourceWidth = Math.floor(sourceHeight * slideRatio)
         } else {
           // We can do the calculations based on the width
           // Pick a random width between 1600 and the width of the original image
-          sourceWidth = Math.floor(Math.random() * (dimensions.width - minSlideWidth + 1) + minSlideWidth)
+          sourceWidth = Math.floor(Math.random() * (sourceDimensions.width - minSlideWidth + 1) + minSlideWidth)
           // Work out the height based on the sourceWidth and the slideRatio
           sourceHeight = Math.floor(sourceWidth / slideRatio)
         }
         // Work out where we are going to _take_ from the original image, this is going to be a random x and y
         // based in the original width and height less the source width and height
-        const sourceX = Math.floor(Math.random() * (dimensions.width - sourceWidth + 1))
-        const sourceY = Math.floor(Math.random() * (dimensions.height - sourceHeight + 1))
+        const sourceX = Math.floor(Math.random() * (sourceDimensions.width - sourceWidth + 1))
+        const sourceY = Math.floor(Math.random() * (sourceDimensions.height - sourceHeight + 1))
 
         if (fs.existsSync(sourceFile)) {
           console.log(sourceFile)
@@ -656,7 +665,6 @@ exports.index = async (req, res) => {
 
   // Add the project to the template values
   req.templateValues.project = project
-
   return res.render('project/index', req.templateValues)
 }
 

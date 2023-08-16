@@ -586,6 +586,10 @@
                         ❌ &nbsp;
                       {{/if}}
                       <small>(No images in downloads folder)</small>
+                      <!--
+                      <button class="button is-small is-warning" name="JSONandImageActions" value="updateHighres">Create
+                        anyway</button>
+                        -->
                     {{/if}}
                   </p>
                 </div>
@@ -615,6 +619,10 @@
                         ❌ &nbsp;
                       {{/if}}
                       <small>(No images in downloads folder)</small>
+                      <!--
+                      <button class="button is-small is-warning" name="JSONandImageActions"
+                        value="updateThumbnails">Create anyway</button>
+                        -->
                     {{/if}}
                   </p>
                 </div>
@@ -628,7 +636,7 @@
               <div class="field-body">
                 <div class="field is-grouped">
                   <p class="control">
-                    {{#if hasImagesInDownloadsFolder}}
+                    {{#if hasHighres}}
                       {{#if hasSlides}}
                         ✅ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
                           value="updateSlides">Update</button>
@@ -643,7 +651,7 @@
                       {{else}}
                         ❌ &nbsp;
                       {{/if}}
-                      <small>(No images in downloads folder)</small>
+                      <small>(No images in Highres folder)</small>
                     {{/if}}
                   </p>
                 </div>
