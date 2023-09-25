@@ -840,7 +840,14 @@
                 target="_blank">localhost:8888</a>
             </p>
             <!-- Add a button that starts the startMinting function -->
-            <button id="startMintingButton" class="button is-primary" onclick="startMinting()">Start minting</button>
+            <div class="buttons">
+              <button id="startMintingButton" class="button is-primary" onclick="startMinting()">Start minting</button>
+              <button id="startMintingAtButton" class="button" onclick="startMintingAt()">Start
+                minting at</button>
+              <input id="startMintingAtInput"
+                style="display: inline-block; width: auto; max-width: auto; margin-top: -8px" class="input"
+                type="number" value="0" />
+            </div>
             <div id="mintProgress"></div>
           </div>
           <div class="column">
@@ -870,6 +877,8 @@
       const startMinting = () => {
         // Remove the start minting button
         if (document.getElementById('startMintingButton')) document.getElementById('startMintingButton').remove()
+        if (document.getElementById('startMintingAtButton')) document.getElementById('startMintingAtButton').remove()
+        if (document.getElementById('startMintingAtInput')) document.getElementById('startMintingAtInput').remove()
         // Build up the id we need to load
         let url = null
         if (platform === 'fxhash 1.0' || platform === 'fxhash 2.0') {
@@ -883,6 +892,13 @@
           document.getElementById('targetFrame').src = url
         }
       }
+      const startMintingAt = () => {
+        // Grab the value from the input
+        mintIndex = parseInt(document.getElementById('startMintingAtInput').value, 10) - 1
+        // Start minting
+        startMinting()
+      }
+
       // This function gets called by the iframe when it's finished
       const forceDownloaded = () => {
         mintIndex++
