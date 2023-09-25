@@ -37,7 +37,7 @@
     <div class="container">
       <h1 class="title">{{project.name}}</h1>
       <!-- Now we have a form that we give all the details in -->
-      <form action="/project/{{project.name}}" method="POST">
+      <form action="/project/{{encode project.name}}" method="POST">
 
         <div class="field is-horizontal">
           <div class="field-label is-normal">
@@ -307,7 +307,7 @@
       <h1 class="title">Revdancatt info</h1>
       <div class="columns">
         <div class="column is-half">
-          <form action="/project/{{project.name}}" method="POST">
+          <form action="/project/{{encode project.name}}" method="POST">
 
             <div class="field is-horizontal">
               <div class="field-label">
@@ -344,6 +344,32 @@
                 <div class="field">
                   <p class="control">
                     {{newRevdancattProjectJSON.directory}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">Show Github</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    <input type="checkbox" name="showGitHub" {{#if newRevdancattProjectJSON.showGitHub}}checked{{/if}}>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">Show RCS</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    <input type="checkbox" name="showRCS" {{#if newRevdancattProjectJSON.showRCS}}checked{{/if}}>
                   </p>
                 </div>
               </div>
@@ -561,7 +587,7 @@
           </form>
         </div>
         <div class="column is-half">
-          <form action="/project/{{project.name}}" method="POST">
+          <form action="/project/{{encode project.name}}" method="POST">
 
             <div class="field is-horizontal">
               <div class="field-label">
@@ -672,6 +698,23 @@
                     {{else}}
                       ❌ &nbsp; <button class="button is-small is-primary" name="JSONandImageActions"
                         value="updateMintJSON">Create</button>
+                    {{/if}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label">
+                <label class="label">RCS</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-grouped">
+                  <p class="control">
+                    {{#if hasRCS}}
+                      ✅
+                    {{else}}
+                      ❌
                     {{/if}}
                   </p>
                 </div>

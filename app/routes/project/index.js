@@ -57,7 +57,7 @@ exports.index = async (req, res) => {
       // Write the projects file back to disk
       fs.writeFileSync(projectsFile, JSON.stringify(projectsJSON, null, 2), 'utf-8')
       // Redirect to the project page
-      return res.redirect(`/project/${req.params.projectName}`)
+      return res.redirect(`/project/${encodeURIComponent(req.params.projectName.replace(/\//g, '|'))}`)
     }
 
     // If we're trying to update the API, then do that
@@ -131,13 +131,13 @@ exports.index = async (req, res) => {
         fs.writeFileSync(projectsFile, JSON.stringify(projectsJSON, null, 2), 'utf-8')
       }
       // Redirect to the project page
-      return res.redirect(`/project/${req.params.projectName}`)
+      return res.redirect(`/project/${encodeURIComponent(req.params.projectName.replace(/\//g, '|'))}`)
     }
 
     // If we are creating a collage then redirect to the collage page
     if (req.body.action === 'collage') {
       // Redirect to the collage page
-      return res.redirect(`/project/${req.params.projectName}/collage`)
+      return res.redirect(`/project/${encodeURIComponent(req.params.projectName.replace(/\//g, '|'))}/collage`)
     }
   }
 
@@ -269,7 +269,7 @@ exports.index = async (req, res) => {
       // Loop through the projects
       // TODO: Grab the project
       for (const revdancattProject of revdancattProjects) {
-        if (revdancattProject.title === req.params.projectName) {
+        if (`${revdancattProject.projectId}` === `${project.projectId}`) {
           // We have a match, so set the revdancattProjectJSON to this project
           revdancattProjectJSON = revdancattProject
         }
@@ -282,6 +282,9 @@ exports.index = async (req, res) => {
     title: null,
     prefix: null,
     directory: null,
+    showGitHub: false,
+    githubUrl: project.githubUrl,
+    showRCS: false,
     projectSource: null,
     platformUrl: null,
     platformName: null,
@@ -351,6 +354,11 @@ exports.index = async (req, res) => {
     newRevdancattProjectJSON.prefix = req.body.prefix
     newRevdancattProjectJSON.ratio = req.body.ratio
     newRevdancattProjectJSON.description = req.body.description
+    newRevdancattProjectJSON.showGitHub = false
+    newRevdancattProjectJSON.showRCS = false
+    if (req.body.showGitHub) newRevdancattProjectJSON.showGitHub = true
+    if (req.body.showRCS) newRevdancattProjectJSON.showRCS = true
+
     //   If we have a projects.json file in revdancatt then we need to load it in
     if (appData.revdancattRootDir) {
       const revdancattProjectFile = path.join(appData.revdancattRootDir, 'data', 'projects.json')
@@ -383,7 +391,7 @@ exports.index = async (req, res) => {
       // Now write the projects file back to disk
       fs.writeFileSync(revdancattProjectFile, JSON.stringify(revdancattProjects, null, 2), 'utf-8')
     }
-    return res.redirect(`/project/${req.params.projectName}`)
+    return res.redirect(`/project/${encodeURIComponent(req.params.projectName.replace(/\//g, '|'))}`)
   }
   req.templateValues.newRevdancattProjectJSON = newRevdancattProjectJSON
 
@@ -413,6 +421,7 @@ exports.index = async (req, res) => {
   let thumbnailsDir = null
   let slidesDir = null
 
+  req.templateValues.hasRCS = false
   req.templateValues.hasHighres = true
   req.templateValues.hasSlides = true
   req.templateValues.hasThumbnails = true
@@ -420,7 +429,6 @@ exports.index = async (req, res) => {
   if (project.projectDir) {
     // Grab the contents of the highres folder for the project from the revdancatt site
     highresDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'highres')
-    console.log('Looking in: ', highresDir)
     if (fs.existsSync(highresDir)) highresFiles = fs.readdirSync(highresDir).filter(file => file.indexOf('.jpg') !== -1)
     // Do the same again for the thumbnails
     thumbnailsDir = path.join(appData.revdancattRootDir, 'app', 'public', 'imgs', 'projects', project.projectDir, 'thumbnails')
@@ -431,6 +439,10 @@ exports.index = async (req, res) => {
     if (fs.existsSync(slidesDir)) slidesFiles = fs.readdirSync(slidesDir).filter(file => file.indexOf('.jpg') !== -1)
     if (slidesFiles.length === 0) req.templateValues.hasSlides = false
     req.templateValues.slides = slidesFiles
+
+    // If we have a revdancattRootDir then we can check to see if we have an RCS file
+    const rcsDir = path.join(appData.revdancattRootDir, 'app', 'public', 'projects', project.projectDir)
+    req.templateValues.hasRCS = (fs.existsSync(rcsDir) && fs.existsSync(path.join(rcsDir, 'index.html')) && fs.existsSync(path.join(rcsDir, 'index.js')))
   } else {
     req.templateValues.hasHighres = false
     req.templateValues.hasSlides = false
@@ -440,7 +452,6 @@ exports.index = async (req, res) => {
   // Finally for the downloads folder, but we use .png this time, and grab the downloads folder from the appData
   const downloadsDir = path.join(appData.downloadsRootDir)
   if (fs.existsSync(downloadsDir)) downloadsFiles = fs.readdirSync(downloadsDir).filter(file => file.indexOf('.png') !== -1)
-
   // Do a loop over the total number of mints
   const imageFilenames = []
   for (let i = 0; i < project.mints.length; i++) {
@@ -475,11 +486,7 @@ exports.index = async (req, res) => {
     } = require('canvas')
     const sizeOf = require('image-size')
     const firstImage = path.join(downloadsDir, `${imageFilenames[0]}.png`)
-    let dimensions = null
-    if (fs.existsSync(firstImage)) {
-      req.templateValues.hasImagesInDownloadsFolder = true
-      dimensions = sizeOf(firstImage)
-    }
+    if (fs.existsSync(firstImage)) req.templateValues.hasImagesInDownloadsFolder = true
 
     if (req.body.JSONandImageActions === 'updateMintJSON') {
       // We need to grab the JSON file for the project that holds all the mints, and then split it up into
@@ -660,7 +667,7 @@ exports.index = async (req, res) => {
     }
 
     // return a reload to the project page
-    return res.redirect(`/project/${req.params.projectName}`)
+    return res.redirect(`/project/${encodeURIComponent(req.params.projectName.replace(/\//g, '|'))}`)
   }
 
   // Add the project to the template values

@@ -322,3 +322,8 @@ exports.toFixed = (price, places) => {
     return ''
   }
 }
+
+exports.escape = (test) => {
+  // we need to return a URL safe string
+  return encodeURIComponent(test)
+}
